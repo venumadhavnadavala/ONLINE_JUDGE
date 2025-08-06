@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
-    XCircle, Code, Send, Play, RefreshCcw, AlertTriangle, CheckCircle2,
-    Gauge, Tag, Clock, MemoryStick
+    XCircle, Code, Send, Play, CheckCircle2, AlertTriangle, Clock, MemoryStick
 } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { java } from '@codemirror/lang-java';
 import { python } from '@codemirror/lang-python';
 import { okaidia } from '@uiw/codemirror-theme-okaidia';
+import ReactMarkdown from 'react-markdown';
 
-
+// API URLs
 const SUBMISSION_API_BASE_URL = 'http://localhost:5000/api/submissions';
 const COMPILER_RUN_URL = 'http://localhost:9000/run';
 const DRAFT_API_BASE_URL = 'http://localhost:5000/api/drafts';
+// New API URL for the backend's AI review endpoint
+const AI_REVIEW_API_URL = 'http://localhost:5000/api/ai-review';
+
 
 function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
     const [code, setCode] = useState('');
@@ -23,15 +26,18 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
     const [compileMessage, setCompileMessage] = useState('');
     const [inputStdin, setInputStdin] = useState('');
     const [outputStdout, setOutputStdout] = useState('');
-    const [testResults, setTestResults] = useState([]);
     const [activeTab, setActiveTab] = useState('test');
-
     const [finalVerdict, setFinalVerdict] = useState('Pending');
     const [executionTime, setExecutionTime] = useState(0);
     const [memoryUsed, setMemoryUsed] = useState(0);
     const [isRunningCustomTest, setIsRunningCustomTest] = useState(false);
     const [verdicts, setVerdicts] = useState([]);
     const [totalTime, setTotalTime] = useState(null);
+    const [testResults, setTestResults] = useState([]);
+
+    // State for AI review content and loading status
+    const [aiReviewContent, setAiReviewContent] = useState('');
+    const [isAIRunning, setIsAIRunning] = useState(false);
 
     // --- Draft Persistence Logic ---
     const debounce = (func, delay) => {
@@ -81,35 +87,34 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
             saveDraft(code, language, problem._id);
         }
     }, [code, language, problem, isAuthenticated, saveDraft]);
-    // --- End Draft Persistence Logic ---
 
+    // --- Event Handlers ---
     const handleRunCode = async () => {
         setCompileMessage('');
         setOutputStdout('');
         setTestResults([]);
         setSubmissionMessage('');
         setIsRunningCustomTest(true);
+        setActiveTab('test');
+
+        const currentInput = activeTab === 'customTest'
+            ? inputStdin
+            : (problem.testCases && problem.testCases.length > 0 ? problem.testCases[0].input : '');
 
         const runData = {
             code,
             language,
-            input: activeTab === 'customTest' ? inputStdin : problem.input
+            input: currentInput
         };
 
         try {
             const response = await axios.post(COMPILER_RUN_URL, runData);
-            setCompileMessage('');
-            setOutputStdout(response.data.output || '');
-            setSubmissionMessage('Custom run completed.');
-            setFinalVerdict('Executed');
-            setActiveTab('test');
+            setCompileMessage(response.data.error ? 'Compilation Error' : 'Successfully Executed');
+            setOutputStdout(response.data.output || response.data.error || '');
         } catch (error) {
             const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Error during custom run.';
-            setCompileMessage(errorMessage);
-            setOutputStdout('');
-            setSubmissionMessage('Custom run failed.');
-            setFinalVerdict('Error');
-            setActiveTab('test');
+            setCompileMessage('Execution Failed');
+            setOutputStdout(errorMessage);
         } finally {
             setIsRunningCustomTest(false);
         }
@@ -121,60 +126,69 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         setIsSubmitting(true);
         setCompileMessage('');
         setOutputStdout('');
-        setTestResults([]);
-        setFinalVerdict('Pending');
+        setFinalVerdict('Pending...');
         setExecutionTime(0);
         setMemoryUsed(0);
         setVerdicts([]);
         setTotalTime(null);
+        setActiveTab('verdict');
 
-        const submissionData = {
-            problemId: problem._id,
-            code,
-            language,
-        };
+        const submissionData = { problemId: problem._id, code, language };
 
         try {
             const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            };
+            const config = { headers: { Authorization: `Bearer ${token}` } };
             const response = await axios.post(SUBMISSION_API_BASE_URL, submissionData, config);
-            
-            const data = response.data;
-            console.log("Final Submission Response from Backend:", data);
 
-            setSubmissionMessage(`Submission evaluated! Verdict: ${data.verdict}.`);
+            const data = response.data;
+            setSubmissionMessage(`Submission evaluated!`);
             setFinalVerdict(data.verdict);
             setExecutionTime(data.executionTime || 0);
             setMemoryUsed(data.memoryUsed || 0);
-            setCompileMessage(data.compileMessage || '');
             setTotalTime(data.executionTime || 0);
-
-            if (data.verdicts && Array.isArray(data.verdicts)) {
-                setVerdicts(data.verdicts);
-            } else {
-                setVerdicts([]);
-            }
-
-            setActiveTab('verdict');
+            setVerdicts(data.verdicts && Array.isArray(data.verdicts) ? data.verdicts : []);
 
         } catch (error) {
-            console.error('Error submitting code:', error);
             const errorMessage = error.response?.data?.message || error.message;
-            const compileMsg = error.response?.data?.compileMessage || errorMessage;
-
             setSubmissionMessage(`Submission failed: ${errorMessage}`);
-            setCompileMessage(compileMsg);
             setFinalVerdict('Error');
-            setActiveTab('test');
         } finally {
             setIsSubmitting(false);
         }
     };
-    
+
+    // --- AI Integration Logic (Updated) ---
+    const handleGetAIReview = async () => {
+        setAiReviewContent('');
+        setIsAIRunning(true);
+        setActiveTab('aiReview'); // Switch to AI Review tab
+
+        // The payload now only contains the code and language
+        const reviewData = {
+            userCode: code,
+            language: language,
+        };
+
+        try {
+            // Call your backend's API endpoint
+            const response = await axios.post(AI_REVIEW_API_URL, reviewData);
+            
+            // Your backend returns a JSON object with a 'review' key
+            if (response.data && response.data.review) {
+                setAiReviewContent(response.data.review);
+            } else {
+                setAiReviewContent('AI review could not be generated. The response from the server was empty.');
+            }
+        } catch (error) {
+            console.error('Error fetching AI review from backend:', error);
+            // Display the error message from the backend, or a generic one
+            const errorMessage = error.response?.data?.message || 'Failed to get AI review. Please try again.';
+            setAiReviewContent(`Error: ${errorMessage}`);
+        } finally {
+            setIsAIRunning(false);
+        }
+    };
+
     const getLanguageExtension = (lang) => {
         switch (lang) {
             case 'cpp': return cpp();
@@ -184,252 +198,259 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         }
     };
 
-    return (
-        <div className="bg-dark min-vh-100 py-5 text-white">
-            <div className="container-fluid px-5">
-                <header className="bg-dark border-bottom border-secondary pb-3 mb-4 d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center">
-                        <img src="/codevm_logo.jpeg" alt="CodeVM Logo" className="me-3" style={{ maxWidth: '40px', height: 'auto' }} />
-                        <h1 className="h4 text-white mb-0 fw-bold" style={{ backgroundImage: 'linear-gradient(to right, #a770ef, #cf8bf3, #fdb99b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            CodeVM
-                        </h1>
-                        <p className="text-muted mb-0 ms-3 d-none d-md-block">
-                            Solve Problem
-                        </p>
-                    </div>
-                    <button onClick={onClose} className="btn btn-outline-light d-flex align-items-center rounded-pill px-3 py-2">
-                        <XCircle size={16} className="me-2" /> Back to Problems
-                    </button>
-                </header>
+    const sampleInput = problem.testCases && problem.testCases.length > 0 ? problem.testCases[0].input : "No sample input available.";
 
-                {submissionMessage && (
-                    <div className={`alert ${finalVerdict === 'Accepted' || finalVerdict === 'Passed' ? 'alert-success' : finalVerdict === 'Pending' || finalVerdict === 'Executed' ? 'alert-info' : 'alert-danger'} alert-dismissible fade show mb-4 rounded-3`} role="alert">
-                        {submissionMessage}
-                        {(finalVerdict === 'Accepted' || finalVerdict === 'Passed' || finalVerdict === 'Error' || finalVerdict === 'Executed') && executionTime > 0 && (
-                            <span className="ms-3">
-                                <Clock size={16} className="me-1" /> {executionTime} ms
-                                <MemoryStick size={16} className="ms-3 me-1" /> {memoryUsed} MB
-                            </span>
-                        )}
-                        <button type="button" className="btn-close" onClick={() => setSubmissionMessage('')} aria-label="Close"></button>
-                    </div>
-                )}
-                
-                <div className="row g-4">
-                    <div className="col-lg-6">
-                        <div className="card card-themed shadow-lg rounded-3 h-100">
-                            <div className="card-header bg-dark border-bottom border-secondary fw-bold">Problem Details</div>
-                            <div className="card-body d-flex flex-column" style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-                                <h5 className="card-title text-white fw-bold mb-3">{problem.title}</h5>
+    return (
+        <>
+            <style>{`
+                /* Your existing CSS styles... (no changes needed here) */
+                :root {
+                    --dark-bg: #1a1a1a;
+                    --dark-bg-lighter: #2c2c2c;
+                    --border-color: #444;
+                    --text-light: #f0f0f0;
+                    --text-muted: #888;
+                    --accent-color: #a770ef;
+                }
+                .ide-container {
+                    display: flex;
+                    gap: 1rem;
+                    height: calc(100vh - 100px);
+                }
+                .panel-left, .panel-right {
+                    background-color: var(--dark-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .panel-left { flex: 0 0 45%; }
+                .panel-right { flex: 1; }
+                .panel-content { padding: 1rem 1.5rem; overflow-y: auto; flex-grow: 1; }
+                .panel-right-inner { display: flex; flex-direction: column; height: 100%; }
+                .editor-container {
+                    flex-grow: 1;
+                    overflow: hidden;
+                    transition: flex-grow 0.3s ease-in-out;
+                }
+                .console-container {
+                    flex-shrink: 0;
+                    height: 35%;
+                    display: flex;
+                    flex-direction: column;
+                    transition: height 0.3s ease-in-out;
+                }
+                .console-tabs .nav-link { background: none !important; border: none !important; color: var(--text-muted) !important; padding: 0.5rem 1rem; }
+                .console-tabs .nav-link.active { color: var(--accent-color) !important; border-bottom: 2px solid var(--accent-color) !important; }
+                .console-body {
+                    padding: 1rem;
+                    overflow-y: auto;
+                    flex-grow: 1;
+                    font-family: 'Fira Code', monospace;
+                    background-color: #212121;
+                    color: var(--text-light);
+                }
+                .console-container.ai-review-hover-expand:hover {
+                    height: 95%;
+                }
+                .markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+                    color: var(--accent-color);
+                    margin-top: 1rem;
+                    margin-bottom: 0.5rem;
+                }
+                .markdown-content p {
+                    margin-bottom: 0.5rem;
+                }
+                .markdown-content ul, .markdown-content ol {
+                    margin-left: 1.5rem;
+                    margin-bottom: 0.5rem;
+                }
+                .markdown-content pre {
+                    background-color: #333;
+                    padding: 0.75rem;
+                    border-radius: 4px;
+                    overflow-x: auto;
+                    margin-bottom: 1rem;
+                }
+                .markdown-content code {
+                    font-family: 'Fira Code', monospace;
+                    color: #fdb99b;
+                }
+                .markdown-content pre code {
+                    color: #f0f0f0;
+                }
+                .action-bar { padding: 0.5rem 1rem; background-color: var(--dark-bg-lighter); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; }
+                pre.problem-block { background-color: var(--dark-bg-lighter); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem; }
+            `}</style>
+            
+            {/* Your existing JSX (no changes needed here) */}
+            <div className="bg-dark min-vh-100 py-4 text-white">
+                <div className="container-fluid px-4">
+                    <header className="pb-3 mb-3 d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center">
+                            <img src="/codevm_logo.jpeg" alt="CodeVM Logo" className="me-3" style={{ maxWidth: '40px', height: 'auto' }} />
+                            <h1 className="h4 text-white mb-0 fw-bold" style={{ backgroundImage: 'linear-gradient(to right, #a770ef, #cf8bf3, #fdb99b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                CodeVM
+                            </h1>
+                        </div>
+                        <button onClick={onClose} className="btn btn-outline-secondary d-flex align-items-center rounded-pill px-3 py-2">
+                            <XCircle size={16} className="me-2" /> Back to Problems
+                        </button>
+                    </header>
+                    <div className="ide-container">
+                        <div className="panel-left">
+                            <div className="panel-content">
+                                <h4 className="fw-bold mb-3">{problem.title}</h4>
                                 <div className="d-flex align-items-center mb-3">
-                                    <span className={`badge rounded-pill me-2 ${
+                                    <span className={`badge me-2 ${
                                         problem.difficulty === 'Easy' ? 'bg-success' :
-                                        problem.difficulty === 'Medium' ? 'bg-warning text-dark' :
-                                        'bg-danger'
-                                    } px-3 py-2`}>
-                                        <Gauge size={14} className="me-1" /> {problem.difficulty}
-                                    </span>
-                                    <span className="text-muted small d-flex align-items-center">
-                                        <Tag size={14} className="me-1" />
-                                        {problem.tags.length > 0 ? (
-                                            problem.tags.map((tag, index) => (
-                                                <span key={index} className="badge bg-info text-dark me-1 rounded-pill">{tag}</span>
-                                            ))
-                                        ) : (
-                                            <span className="fst-italic">None</span>
-                                        )}
+                                        problem.difficulty === 'Medium' ? 'bg-warning text-dark' : 'bg-danger'
+                                    }`}>{problem.difficulty}</span>
+                                    <span className="text-muted small">
+                                        {problem.tags.map((tag, index) => (
+                                            <span key={index} className="badge bg-secondary me-1">{tag}</span>
+                                        ))}
                                     </span>
                                 </div>
-                                <p className="text-muted small mb-3">Time Limit: <span className="fw-bold text-info">{problem.timeLimit}s</span> | Memory Limit: <span className="fw-bold text-info">{problem.memoryLimit}MB</span></p>
-                                <hr className="my-3 border-secondary" />
-
-                                <h6 className="fw-bold text-info">Problem Statement:</h6>
-                                <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">{problem.statement}</pre>
-
-                                <h6 className="fw-bold text-info">Input Format:</h6>
-                                <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">{problem.input}</pre>
-
-                                <h6 className="fw-bold text-info">Output Format:</h6>
-                                <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">{problem.output}</pre>
-
-                                <h6 className="fw-bold text-info">Constraints:</h6>
-                                <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">{problem.constraints}</pre>
+                                <p className="text-muted small mb-4">Time Limit: {problem.timeLimit}s | Memory Limit: {problem.memoryLimit}MB</p>
+                                <h6 className="fw-bold text-info">Problem Statement</h6>
+                                <p className="text-light mb-4">{problem.statement}</p>
+                                <h6 className="fw-bold text-info">Input Format</h6>
+                                <p className="text-light mb-4">{problem.input}</p>
+                                <h6 className="fw-bold text-info">Output Format</h6>
+                                <p className="text-light mb-4">{problem.output}</p>
+                                <h6 className="fw-bold text-info">Constraints</h6>
+                                <pre className="problem-block">{problem.constraints}</pre>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Right Panel: Code Editor and Results */}
-                    <div className="col-lg-6">
-                        <div className="card card-themed shadow-lg rounded-3 h-100">
-                            <div className="card-header bg-dark border-bottom border-secondary fw-bold d-flex justify-content-between align-items-center">
-                                <span><Code size={18} className="me-2" /> Your Solution</span>
-                                <div className="d-flex align-items-center">
-                                    <label htmlFor="languageSelect" className="form-label mb-0 me-2 small text-muted">Language:</label>
+                        <div className="panel-right">
+                            <div className="panel-right-inner">
+                                <div className="d-flex justify-content-between align-items-center p-2" style={{backgroundColor: '#2c2c2c'}}>
+                                    <span className="ms-2 small text-light"><Code size={16} /> Your Code</span>
                                     <select
-                                        className="form-select form-select-sm form-select-themed rounded-pill"
-                                        id="languageSelect"
+                                        className="form-select form-select-sm"
                                         value={language}
                                         onChange={(e) => setLanguage(e.target.value)}
-                                        style={{ width: 'auto' }}
-                                        required
+                                        style={{ width: 'auto', backgroundColor: '#3a3a3a', color: 'white', border: '1px solid #555' }}
                                     >
                                         <option value="cpp">C++</option>
                                         <option value="java">Java</option>
                                         <option value="python">Python</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div className="card-body p-0 d-flex flex-column">
-                                <CodeMirror
-                                    value={code}
-                                    theme={okaidia}
-                                    extensions={[getLanguageExtension(language)]}
-                                    onChange={(value) => setCode(value)}
-                                    minHeight="300px"
-                                />
-                                <div className="card-footer bg-dark border-top border-secondary d-flex justify-content-end gap-2 p-3">
+                                <div className="editor-container">
+                                    <CodeMirror
+                                        value={code}
+                                        theme={okaidia}
+                                        extensions={[getLanguageExtension(language)]}
+                                        onChange={(value) => setCode(value)}
+                                        height="100%"
+                                        style={{height: '100%'}}
+                                    />
+                                </div>
+                                <div className="action-bar">
                                     <button
                                         onClick={handleRunCode}
-                                        type="button"
-                                        className="btn btn-outline-info d-flex align-items-center rounded-pill px-3 py-2"
-                                        disabled={isSubmitting || isRunningCustomTest}
+                                        className="btn btn-outline-info rounded-pill px-3 py-1"
+                                        disabled={isSubmitting || isRunningCustomTest || isAIRunning}
                                     >
-                                        {isRunningCustomTest ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Running...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Play size={16} className="me-2" /> Run
-                                            </>
-                                        )}
+                                        {isRunningCustomTest ? 'Running...' : <><Play size={16} className="me-1" /> Run</>}
                                     </button>
                                     <button
                                         onClick={handleCodeSubmit}
-                                        type="submit"
-                                        className="btn btn-success-gradient d-flex align-items-center rounded-pill px-3 py-2 fw-bold"
-                                        disabled={isSubmitting || isRunningCustomTest}
+                                        className="btn btn-success rounded-pill px-4 py-1 fw-bold"
+                                        disabled={isSubmitting || isRunningCustomTest || isAIRunning}
                                     >
-                                        {isSubmitting ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Submitting...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send size={16} className="me-2" /> Submit
-                                            </>
-                                        )}
+                                        {isSubmitting ? 'Submitting...' : <><Send size={16} className="me-1" /> Submit</>}
+                                    </button>
+                                    <button
+                                        onClick={handleGetAIReview}
+                                        className="btn btn-outline-primary rounded-pill px-3 py-1"
+                                        disabled={isSubmitting || isRunningCustomTest || isAIRunning || !code}
+                                    >
+                                        {isAIRunning ? 'Getting AI Review...' : <><Code size={16} className="me-1" /> Get AI Review</>}
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Results Panel */}
-                        <div className="card card-themed shadow-lg rounded-3 mt-4">
-                            <div className="card-header bg-dark border-bottom border-secondary fw-bold">
-                                <ul className="nav nav-tabs card-header-tabs">
-                                    <li className="nav-item">
-                                        <button className={`nav-link ${activeTab === 'test' ? 'active text-info' : 'text-white'}`} onClick={() => setActiveTab('test')} style={{ backgroundColor: activeTab === 'test' ? '#343a40' : 'transparent', borderBottom: 'none' }}>
-                                            Test
-                                        </button>
-                                    </li>
-                                    <li className="nav-item">
-                                        <button className={`nav-link ${activeTab === 'customTest' ? 'active text-info' : 'text-white'}`} onClick={() => setActiveTab('customTest')} style={{ backgroundColor: activeTab === 'customTest' ? '#343a40' : 'transparent', borderBottom: 'none' }}>
-                                            Custom Test
-                                        </button>
-                                    </li>
-                                    <li className="nav-item">
-                                        <button className={`nav-link ${activeTab === 'verdict' ? 'active text-info' : 'text-white'}`} onClick={() => setActiveTab('verdict')} style={{ backgroundColor: activeTab === 'verdict' ? '#343a40' : 'transparent', borderBottom: 'none' }}>
-                                            Verdict
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="card-body">
-                                {activeTab === 'test' && (
-                                    <div>
-                                        <h6 className="fw-bold text-info mb-2 d-flex align-items-center">
-                                            {compileMessage.includes('Error') ? <AlertTriangle size={18} className="me-2 text-danger" /> : (compileMessage ? <CheckCircle2 size={18} className="me-2 text-success" /> : null)}
-                                            Compile Message:
-                                        </h6>
-                                        <pre className={`bg-dark p-3 rounded border ${compileMessage.includes('Error') ? 'border-danger' : 'border-success'} text-light fs-6 mb-4`}>
-                                            {compileMessage || "No compilation message yet."}
-                                        </pre>
-
-                                        <h6 className="fw-bold text-info mb-2">Input (stdin):</h6>
-                                        <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">
-                                            {problem.input || "No sample input available."}
-                                        </pre>
-
-                                        <h6 className="fw-bold text-info mb-2">Your Output (stdout):</h6>
-                                        <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">
-                                            {outputStdout || "Run your code to see output."}
-                                        </pre>
-                                    </div>
-                                )}
-                                {activeTab === 'customTest' && (
-                                    <div>
-                                        <h6 className="fw-bold text-info mb-2">Custom Input (stdin):</h6>
-                                        <textarea
-                                            className="form-control form-control-themed border-secondary rounded-3 mb-4"
-                                            rows="8"
-                                            value={inputStdin}
-                                            onChange={(e) => setInputStdin(e.target.value)}
-                                            placeholder="Enter your custom test input here..."
-                                            style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
-                                        ></textarea>
-
-                                        <h6 className="fw-bold text-info mb-2 d-flex align-items-center">
-                                            {compileMessage.includes('Error') ? <AlertTriangle size={18} className="me-2 text-danger" /> : (compileMessage ? <CheckCircle2 size={18} className="me-2 text-success" /> : null)}
-                                            Compile Message:
-                                        </h6>
-                                        <pre className={`bg-dark p-3 rounded border ${compileMessage.includes('Error') ? 'border-danger' : 'border-success'} text-light fs-6 mb-4`}>
-                                            {compileMessage || "No compilation message yet."}
-                                        </pre>
-
-                                        <h6 className="fw-bold text-info mb-2">Your Output (stdout):</h6>
-                                        <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6 mb-4">
-                                            {outputStdout || "Run your code to see output."}
-                                        </pre>
-                                    </div>
-                                )}
-                                {activeTab === 'verdict' && (
-                                    <div className="verdict-panel">
-                                        <h6 className="fw-bold text-info mb-2 d-flex align-items-center">
-                                            <span className={`me-2 ${finalVerdict === 'Accepted' || finalVerdict === 'Passed' ? 'text-success' : 'text-danger'}`}>
-                                                {finalVerdict === 'Accepted' || finalVerdict === 'Passed' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-                                            </span>
-                                            Final Verdict: <span className="ms-2">{finalVerdict}</span>
-                                        </h6>
-                                        {totalTime !== null && (
-                                            <p className="small text-muted mb-2">Total Execution Time: <span className="fw-bold text-info">{totalTime} ms</span></p>
+                                <div className={`console-container ${activeTab === 'aiReview' ? 'ai-review-hover-expand' : ''}`}>
+                                    <ul className="nav nav-tabs console-tabs px-2">
+                                        <li className="nav-item">
+                                            <button className={`nav-link ${activeTab === 'test' ? 'active' : ''}`} onClick={() => setActiveTab('test')}>Test Case</button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button className={`nav-link ${activeTab === 'customTest' ? 'active' : ''}`} onClick={() => setActiveTab('customTest')}>Custom Input</button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button className={`nav-link ${activeTab === 'verdict' ? 'active' : ''}`} onClick={() => setActiveTab('verdict')}>Verdict</button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button className={`nav-link ${activeTab === 'aiReview' ? 'active' : ''}`} onClick={() => setActiveTab('aiReview')}>AI Review</button>
+                                        </li>
+                                    </ul>
+                                    <div className="console-body">
+                                        {activeTab === 'test' && (
+                                            <div>
+                                                <h6 className="fw-bold text-info small mb-1">Input (stdin)</h6>
+                                                <pre className="problem-block">{sampleInput}</pre>
+                                                <h6 className="fw-bold text-info small mt-3 mb-1">Your Output (stdout)</h6>
+                                                <pre className="problem-block">{outputStdout || "Run code to see output..."}</pre>
+                                            </div>
                                         )}
-                                        {verdicts.length > 0 ? (
-                                            <ul className="list-group list-group-flush">
-                                                {verdicts.map((v, index) => (
-                                                    <li key={index} className={`list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center ${v.status === 'Passed' ? 'text-success' : 'text-danger'}`}>
-                                                        <span>
-                                                            Test Case {index + 1}: {v.status}
+                                        {activeTab === 'customTest' && (
+                                            <div>
+                                                <h6 className="fw-bold text-info small mb-2">Your Custom Input</h6>
+                                                <textarea
+                                                    className="form-control"
+                                                    rows="3"
+                                                    value={inputStdin}
+                                                    onChange={(e) => setInputStdin(e.target.value)}
+                                                    placeholder="Enter custom input here..."
+                                                    style={{backgroundColor: '#2c2c2c', color: 'white', border: '1px solid #555'}}
+                                                ></textarea>
+                                                <button onClick={handleRunCode} className="btn btn-sm btn-info mt-2">Run with Custom Input</button>
+                                            </div>
+                                        )}
+                                        {activeTab === 'verdict' && (
+                                            <div>
+                                                {submissionMessage && (
+                                                    <div className={`alert alert-dark d-flex justify-content-between align-items-center ${finalVerdict === 'Accepted' ? 'border-success' : 'border-danger'}`}>
+                                                        <span><strong>{finalVerdict}</strong></span>
+                                                        <span className="small text-muted">
+                                                            <Clock size={14} className="me-1" /> {totalTime} ms
+                                                            <MemoryStick size={14} className="ms-2 me-1" /> {memoryUsed} MB
                                                         </span>
-                                                        <span className="small">
-                                                            {v.executionTime} ms | {v.memoryUsed} MB
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <div className="alert alert-secondary text-center small card-themed text-muted border-secondary rounded-3" role="alert">No detailed verdicts available.</div>
+                                                    </div>
+                                                )}
+                                                {verdicts.length > 0 ? verdicts.map((v, index) => (
+                                                    <div key={index} className={`d-flex justify-content-between p-2 rounded mb-1 ${v.status === 'Passed' ? 'bg-success bg-opacity-10' : 'bg-danger bg-opacity-10'}`}>
+                                                        <span className={v.status === 'Passed' ? 'text-success' : 'text-danger'}>Test Case {index + 1}</span>
+                                                        <span className="small text-muted">{v.executionTime} ms | {v.memoryUsed} MB</span>
+                                                    </div>
+                                                )) : <p className="text-muted text-center mt-3">Submit your code to see the verdict.</p>}
+                                            </div>
+                                        )}
+                                        {activeTab === 'aiReview' && (
+                                            <div>
+                                                <h6 className="fw-bold text-info small mb-2">AI Code Review</h6>
+                                                {isAIRunning ? (
+                                                    <p className="text-muted text-center mt-3">Getting AI review, please wait...</p>
+                                                ) : (
+                                                    <div className="markdown-content">
+                                                        <ReactMarkdown>
+                                                            {aiReviewContent || "Click 'Get AI Review' to analyze your code."}
+                                                        </ReactMarkdown>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 

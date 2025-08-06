@@ -99,7 +99,7 @@ function Dashboard({ userRole, isAuthenticated }) {
             <div className="container">
                 <header className="bg-dark text-white p-4 mb-5 rounded-3 border-bottom border-info border-3">
                     <h1 className="h3 fw-bold mb-0">Dashboard</h1>
-                    <p className="text-muted">Welcome back to CodeVM, {userData?.name || 'User'}!</p>
+                    <p className="text-light">Welcome back to CodeVM, {userData?.name || 'User'}!</p>
                 </header>
 
                 {message && (

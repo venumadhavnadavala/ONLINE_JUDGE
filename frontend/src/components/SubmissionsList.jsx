@@ -171,7 +171,7 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                                                 </td>
                                                 <td className="text-light">{sub.executionTime ? `${sub.executionTime} ms` : 'N/A'}</td>
                                                 <td className="text-light">{sub.memoryUsed ? `${sub.memoryUsed} MB` : 'N/A'}</td>
-                                                <td className="text-muted small">{new Date(sub.submittedAt).toLocaleString()}</td>
+                                                <td className="text-light">{new Date(sub.submittedAt).toLocaleString()}</td>
                                                 {userRole === 'admin' && <td className="text-light">{sub.userId?.name || 'N/A'}</td>}
                                             </tr>
                                         ))}
