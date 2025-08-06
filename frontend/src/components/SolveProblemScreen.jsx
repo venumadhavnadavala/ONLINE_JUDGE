@@ -289,7 +289,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 <div className="container-fluid px-4">
                     <header className="pb-3 mb-3 d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
-                            <img src="/codevm_logo.jpeg" alt="CodeVM Logo" className="me-3" style={{ maxWidth: '40px', height: 'auto' }} />
+                            <img src="../public/codevm_logo.svg" alt="CodeVM Logo" className="me-3" style={{ maxWidth: '40px', height: 'auto' }} />
                             <h1 className="h4 text-white mb-0 fw-bold" style={{ backgroundImage: 'linear-gradient(to right, #a770ef, #cf8bf3, #fdb99b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                 CodeVM
                             </h1>

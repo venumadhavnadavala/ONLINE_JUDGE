@@ -102,9 +102,9 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                 <div className="card card-themed shadow-lg mb-5 rounded-3">
                     <div className="card-body p-4">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h2 className="h4 text-light mb-0 fw-semibold">All Submissions</h2>
+                            <h2 className="h4 text mb-0 fw-semibold">All Submissions</h2>
                             <div className="d-flex align-items-center">
-                                <label htmlFor="filterVerdict" className="form-label text-light mb-0 me-2">Filter by Verdict:</label>
+                                <label htmlFor="filterVerdict" className="form-label text mb-0 me-2">Filter by Verdict:</label>
                                 <select
                                     id="filterVerdict"
                                     className="form-select form-select-themed rounded-pill"
@@ -140,12 +140,12 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                                 <table className="table table-striped table-hover align-middle table-themed">
                                     <thead className="table-secondary">
                                         <tr>
-                                            <th className="text-white">Problem</th>
-                                            <th className="text-white">Language</th>
-                                            <th className="text-white">Verdict</th>
-                                            <th className="text-white">Time</th>
-                                            <th className="text-white">Memory</th>
-                                            <th className="text-white">Submitted At</th>
+                                            <th className="text">Problem</th>
+                                            <th className="text">Language</th>
+                                            <th className="text">Verdict</th>
+                                            <th className="text">Time</th>
+                                            <th className="text">Memory</th>
+                                            <th className="text">Submitted At</th>
                                             {userRole === 'admin' && <th className="text-white">User</th>} {/* Show user for admin */}
                                         </tr>
                                     </thead>
@@ -163,16 +163,16 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                                                         {sub.problemId?.difficulty || 'N/A'}
                                                     </span>
                                                 </td>
-                                                <td className="text-light">{sub.language.toUpperCase()}</td>
+                                                <td className="text">{sub.language.toUpperCase()}</td>
                                                 <td>
                                                     <span className={`badge rounded-pill ${getVerdictBadgeClass(sub.verdict)} px-3 py-2`}>
                                                         {getVerdictIcon(sub.verdict)} {sub.verdict}
                                                     </span>
                                                 </td>
-                                                <td className="text-light">{sub.executionTime ? `${sub.executionTime} ms` : 'N/A'}</td>
-                                                <td className="text-light">{sub.memoryUsed ? `${sub.memoryUsed} MB` : 'N/A'}</td>
-                                                <td className="text-light">{new Date(sub.submittedAt).toLocaleString()}</td>
-                                                {userRole === 'admin' && <td className="text-light">{sub.userId?.name || 'N/A'}</td>}
+                                                <td className="text">{sub.executionTime ? `${sub.executionTime} ms` : 'N/A'}</td>
+                                                <td className="text">{sub.memoryUsed ? `${sub.memoryUsed} MB` : 'N/A'}</td>
+                                                <td className="text">{new Date(sub.submittedAt).toLocaleString()}</td>
+                                                {userRole === 'admin' && <td className="text">{sub.userId?.name || 'N/A'}</td>}
                                             </tr>
                                         ))}
                                     </tbody>

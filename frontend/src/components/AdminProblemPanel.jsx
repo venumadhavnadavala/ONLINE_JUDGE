@@ -307,11 +307,12 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                         <button type="button" className="btn-close" onClick={() => setMessage('')} aria-label="Close"></button>
                     </div>
                 )}
-
+                
+ {/* new line */}
                 <div className="card card-themed shadow-lg mb-5 rounded-3">
                     <div className="card-body p-4">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h2 className="h4 text-light mb-0 fw-semibold">Problems List</h2>
+                            <h2 className="h4 text mb-0 fw-semibold">Problems List</h2>
                             {isAdmin && (
                                 <button
                                     onClick={openCreateProblemModal}
@@ -349,7 +350,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                     <div className="col" key={problem._id}>
                                         <div className="card card-themed h-100 shadow-sm rounded-3 border-secondary">
                                             <div className="card-body d-flex flex-column">
-                                                <h5 className="card-title text-light fw-bold mb-2">{problem.title}</h5>
+                                                <h5 className="card-title text fw-bold mb-2">{problem.title}</h5>
                                                 <div className="d-flex align-items-center mb-3">
                                                     <span className={`badge rounded-pill me-2 ${
                                                         problem.difficulty === 'Easy' ? 'bg-success' :
@@ -367,7 +368,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="card-text text-muted small flex-grow-1">{problem.statement.substring(0, 100)}...</p>
+                                                <p className="card-text text small flex-grow-1">{problem.statement.substring(0, 100)}...</p>
                                                 <div className="d-flex justify-content-end gap-2 mt-3">
                                                     <button
                                                         onClick={() => openViewProblemModal(problem)}
@@ -593,7 +594,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                 <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                                     <div className="row mb-3">
                                         <div className="col-md-4">
-                                            <p className="mb-1 text-muted"><strong>Difficulty:</strong></p>
+                                            <p className="mb-1 text"><strong>Difficulty:</strong></p>
                                             <span className={`badge rounded-pill ${
                                                 currentProblem.difficulty === 'Easy' ? 'bg-success' :
                                                 currentProblem.difficulty === 'Medium' ? 'bg-warning text-dark' :
@@ -603,15 +604,15 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                             </span>
                                         </div>
                                         <div className="col-md-4">
-                                            <p className="mb-1 text-muted"><strong>Time Limit:</strong></p>
+                                            <p className="mb-1 text"><strong>Time Limit:</strong></p>
                                             <span className="fw-bold text-info">{currentProblem.timeLimit}</span> seconds
                                         </div>
                                         <div className="col-md-4">
-                                            <p className="mb-1 text-muted"><strong>Memory Limit:</strong></p>
+                                            <p className="mb-1 text"><strong>Memory Limit:</strong></p>
                                             <span className="fw-bold text-info">{currentProblem.memoryLimit}</span> MB
                                         </div>
                                     </div>
-                                    <p className="mb-3 text-muted"><strong>Tags:</strong> {currentProblem.tags.length > 0 ? (
+                                    <p className="mb-3 text"><strong>Tags:</strong> {currentProblem.tags.length > 0 ? (
                                         currentProblem.tags.map((tag, index) => (
                                             <span key={index} className="badge bg-info text-dark me-1 rounded-pill"><Tag size={12} className="me-1" />{tag}</span>
                                         ))
