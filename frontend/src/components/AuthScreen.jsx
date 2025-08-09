@@ -143,7 +143,7 @@ function AuthScreen({ onLogin, onRegister, message }) {
                             >
                                 {/* Logo */}
                           <div className="text-center">
-                        <img src="../public/codevm_logo.svg" alt="CodeVM Logo" className="auth-logo mb-4" />
+                        <img src="/codevm_logo.svg" alt="CodeVM Logo" className="auth-logo mb-4" />
                       
                     </div>
 
