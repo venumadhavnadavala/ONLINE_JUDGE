@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ListChecks, Filter, CheckCircle2, XCircle, Clock, MemoryStick } from 'lucide-react';
+const api_url = import.meta.env.VITE_SERVER;
 
-const SUBMISSION_API_BASE_URL = 'http://localhost:5000/api/submissions';
+
+const SUBMISSION_API_BASE_URL =  ` ${api_url}/api/submissions`;
 
 function SubmissionsList({ userRole, isAuthenticated }) {
     const [submissions, setSubmissions] = useState([]);

@@ -11,11 +11,13 @@ import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import ReactMarkdown from 'react-markdown';
 
 // API URLs
-const SUBMISSION_API_BASE_URL = 'http://localhost:5000/api/submissions';
-const COMPILER_RUN_URL = 'http://localhost:9000/run';
-const DRAFT_API_BASE_URL = 'http://localhost:5000/api/drafts';
+const api_url = import.meta.env.VITE_SERVER;
+const api_com = import.meta.env.VITE_COMPILER;
+const SUBMISSION_API_BASE_URL = ` ${api_url}/api/submissions`;
+const COMPILER_RUN_URL = ` ${api_com}/run`;
+const DRAFT_API_BASE_URL =  ` ${api_url}/api/drafts`;
 // New API URL for the backend's AI review endpoint
-const AI_REVIEW_API_URL = 'http://localhost:5000/api/ai-review';
+const AI_REVIEW_API_URL =  ` ${api_url}/api/ai-review`;
 
 
 function SolveProblemScreen({ problem, onClose, isAuthenticated }) {

@@ -10,9 +10,9 @@ import Navbar from './components/Navbar.jsx'; // New Navbar component
 import Dashboard from './components/Dashboard.jsx'; // New Dashboard component
 import Contests from './components/Contests.jsx'; // New Contests component
 import SubmissionsList from './components/SubmissionsList.jsx'; // New SubmissionsList component
-
+const api_url = import.meta.env.VITE_SERVER;
 // Base URL for user authentication API
-const USER_API_BASE_URL = 'http://localhost:5000/api/users';
+const USER_API_BASE_URL = `${api_url}/api/users`;
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
