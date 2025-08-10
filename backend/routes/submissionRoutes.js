@@ -6,7 +6,7 @@ const TestCase = require('../models/TestCase');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const axios = require('axios');
 
-const COMPILER_URL = 'http://localhost:9000/submit';
+const COMPILER_URL = 'http://15.206.229.239:9000/submit';
 
 // @route   POST /api/submissions
 // @desc    Submit code for a problem
