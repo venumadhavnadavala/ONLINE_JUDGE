@@ -1,5 +1,15 @@
 # 💻 CodeVM — Your Scalable Online Judge
 
+<p align="center">
+  <a href="https://www.codevm.online">
+    <img src="https://img.shields.io/badge/Live_Site-www.codevm.online-blue?style=for-the-badge&logo=vercel" alt="Live Site">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://drive.google.com/drive/folders/1MERZ9veRAZ32EwlGROG-sm-31WQXkBix?usp=sharing">
+    <img src="https://img.shields.io/badge/Watch_Demo_Video-FF0000?style=for-the-badge&logo=youtube" alt="Demo Video">
+  </a>
+</p>
+
 > **CodeVM** is a robust, full-stack online judge platform designed for competitive programming. It provides a secure, scalable, and intuitive environment for users to solve problems, compete in contests, and track their progress.
 
 ---
@@ -41,21 +51,21 @@
 * **JWT (JSON Web Tokens)** are used for managing user sessions upon successful login.
 * Tokens are stored in **local storage** to maintain authentication state across the application.
 * **Admin Panel**:
-    * A completely separate interface for admins to perform privileged actions.
-    * Admins can add/edit problems, manage test cases, and create new contests.
+    * A completely separate interface for admins to perform privileged actions.
+    * Admins can add/edit problems, manage test cases, and create new contests.
 
 ---
 
 ## ⚙️ Tech Stack
 
-| Category         | Technology                               |
+| Category         | Technology                               |
 |------------------|------------------------------------------|
-| 🌐 Frontend      | React.js (Vercel deployment)             |
-| 🧠 Backend       | Node.js + Express.js                     |
-| 📦 Database      | MongoDB                                  |
-| 🐳 Containers      | Docker                                   |
-| 🔒 Security      | JWT + Password Hashing + Docker Isolation |
-| ☁️ Hosting        | AWS EC2 + Nginx + Certbot SSL            |
+| 🌐 Frontend      | React.js (Vercel deployment)             |
+| 🧠 Backend       | Node.js + Express.js                     |
+| 📦 Database      | MongoDB                                  |
+| 🐳 Containers      | Docker                                   |
+| 🔒 Security      | JWT + Password Hashing + Docker Isolation |
+| ☁️ Hosting        | AWS EC2 + Nginx + Certbot SSL            |
 
 ---
 
