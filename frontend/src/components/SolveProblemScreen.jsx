@@ -216,8 +216,15 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 }
                 .ide-container {
                     display: flex;
+                    flex-direction: row;
                     gap: 1rem;
                     height: calc(100vh - 100px);
+                }
+                @media (max-width: 768px) {
+                    .ide-container {
+                        flex-direction: column;
+                        height: auto;
+                    }
                 }
                 .panel-left, .panel-right {
                     background-color: var(--dark-bg);
@@ -229,6 +236,21 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 }
                 .panel-left { flex: 0 0 45%; }
                 .panel-right { flex: 1; }
+                @media (max-width: 768px) {
+                    .panel-left, .panel-right {
+                        flex: none;
+                        width: 100%;
+                    }
+                    .panel-left {
+                        order: 1;
+                        max-height: 40vh;
+                        overflow-y: auto;
+                    }
+                    .panel-right {
+                        order: 2;
+                        min-height: 60vh;
+                    }
+                }
                 .panel-content { padding: 1rem 1.5rem; overflow-y: auto; flex-grow: 1; }
                 .panel-right-inner { display: flex; flex-direction: column; height: 100%; }
                 .editor-container {
@@ -282,7 +304,26 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 .markdown-content pre code {
                     color: #f0f0f0;
                 }
-                .action-bar { padding: 0.5rem 1rem; background-color: var(--dark-bg-lighter); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; }
+                .action-bar { 
+                    padding: 0.5rem 1rem; 
+                    background-color: var(--dark-bg-lighter); 
+                    border-top: 1px solid var(--border-color); 
+                    border-bottom: 1px solid var(--border-color); 
+                    display: flex; 
+                    justify-content: flex-end; 
+                    align-items: center; 
+                    gap: 0.75rem; 
+                }
+                @media (max-width: 768px) {
+                    .action-bar {
+                        flex-wrap: wrap;
+                        gap: 0.5rem;
+                    }
+                    .action-bar button {
+                        flex: 1;
+                        min-width: 100px;
+                    }
+                }
                 pre.problem-block { background-color: var(--dark-bg-lighter); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem; }
             `}</style>
             
