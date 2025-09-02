@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogIn, User as UserIcon, Shield, ArrowLeft } from 'lucide-react';
+import { LogIn, User, Shield, ArrowLeft, Sparkles, Code, Lock } from 'lucide-react';
 
 function AuthScreen({ onLogin, onRegister, message }) {
     const [isLoginMode, setIsLoginMode] = useState(false);
@@ -46,297 +46,239 @@ function AuthScreen({ onLogin, onRegister, message }) {
         setCurrentAuthMessage('');
     };
 
-    // Custom styles for enhanced visual appeal
-    const customStyles = {
-        backgroundGradient: {
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 35%, #0f3460 100%)',
-            minHeight: '100vh'
-        },
-        cardGlass: {
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 25px 45px rgba(0, 0, 0, 0.3)'
-        },
-        btnPrimary: {
-            background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
-            border: 'none',
-            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-            transition: 'all 0.3s ease'
-        },
-        btnSuccess: {
-            background: 'linear-gradient(45deg, #56ab2f 0%, #a8e6cf 100%)',
-            border: 'none',
-            boxShadow: '0 8px 25px rgba(86, 171, 47, 0.4)',
-            transition: 'all 0.3s ease'
-        },
-        btnWarning: {
-            background: 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)',
-            border: 'none',
-            boxShadow: '0 8px 25px rgba(245, 87, 108, 0.4)',
-            transition: 'all 0.3s ease'
-        },
-        textGradient: {
-            background: 'linear-gradient(45deg, #667eea, #764ba2)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-        },
-        logoPlaceholder: {
-            background: 'linear-gradient(45deg, #667eea, #764ba2)',
-            width: '120px',
-            height: '120px',
-            borderRadius: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
-        },
-        formControl: {
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            color: '#fff',
-            transition: 'all 0.3s ease'
-        },
-        floatingAnimation: {
-            animation: 'float 6s ease-in-out infinite'
-        }
-    };
-
     // Landing Screen
     if (showLanding) {
         return (
-            <div style={customStyles.backgroundGradient} className="d-flex align-items-center justify-content-center position-relative overflow-hidden">
-                {/* Floating background elements */}
-                <div 
-                    className="position-absolute rounded-circle opacity-25"
-                    style={{
-                        width: '300px',
-                        height: '300px',
-                        background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                        top: '-150px',
-                        right: '-150px',
-                        filter: 'blur(40px)',
-                        animation: 'float 8s ease-in-out infinite'
-                    }}
-                ></div>
-                <div 
-                    className="position-absolute rounded-circle opacity-20"
-                    style={{
-                        width: '250px',
-                        height: '250px',
-                        background: 'linear-gradient(45deg, #f093fb, #f5576c)',
-                        bottom: '-100px',
-                        left: '-100px',
-                        filter: 'blur(40px)',
-                        animation: 'float 10s ease-in-out infinite reverse'
-                    }}
-                ></div>
+            <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
+                {/* Animated background elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute w-96 h-96 rounded-full opacity-20 animate-pulse bg-gradient-to-br from-purple-500 to-blue-600 -top-20 -right-20 blur-3xl" style={{ animationDuration: '4s' }}></div>
+                    <div className="absolute w-80 h-80 rounded-full opacity-15 animate-pulse bg-gradient-to-br from-pink-500 to-red-500 -bottom-20 -left-20 blur-3xl" style={{ animationDuration: '6s', animationDelay: '2s' }}></div>
+                    <div className="absolute w-64 h-64 rounded-full opacity-10 animate-pulse bg-gradient-to-br from-green-500 to-teal-500 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 blur-2xl" style={{ animationDuration: '8s', animationDelay: '4s' }}></div>
+                </div>
 
-                <div className="container">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-8 col-xl-6">
-                            <div 
-                                className="card border-0 rounded-4 text-center p-5"
-                                style={customStyles.cardGlass}
-                            >
-                                {/* Logo */}
-                          <div className="text-center">
-                        <img src="/codevm_logo.svg" alt="CodeVM Logo" className="auth-logo mb-4" />
-                      
-                    </div>
+                {/* Floating particles */}
+                <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(12)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-2 h-2 bg-white rounded-full opacity-30 animate-bounce"
+                            style={{
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                animationDelay: `${Math.random() * 5}s`,
+                                animationDuration: `${3 + Math.random() * 4}s`
+                            }}
+                        ></div>
+                    ))}
+                </div>
 
-
-                                
-                                <div className="d-grid gap-3 col-md-10 col-lg-8 mx-auto">
-                                    <button 
-                                        onClick={handleUserLoginClick} 
-                                        className="btn btn-lg rounded-pill py-3 px-5 d-flex align-items-center justify-content-center fw-bold text-white"
-                                        style={customStyles.btnPrimary}
-                                        onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                        onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                    >
-                                        <UserIcon size={24} className="me-3" /> User Login
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={handleAdminLoginClick} 
-                                        className="btn btn-lg rounded-pill py-3 px-5 d-flex align-items-center justify-content-center fw-bold text-white"
-                                        style={customStyles.btnSuccess}
-                                        onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                        onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                    >
-                                        <Shield size={24} className="me-3" /> Admin Login
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={handleRegisterClick} 
-                                        className="btn btn-lg rounded-pill py-3 px-5 d-flex align-items-center justify-content-center fw-bold text-white"
-                                        style={customStyles.btnWarning}
-                                        onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                        onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                    >
-                                        <LogIn size={24} className="me-3" /> Register
-                                    </button>
+                <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+                    <div className="w-full max-w-2xl">
+                        <div className="backdrop-blur-2xl bg-white/10 rounded-3xl border border-white/20 p-12 shadow-2xl relative">
+                            {/* Header glow effect */}
+                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-60 rounded-full"></div>
+                            
+                            {/* Logo section */}
+                            <div className="text-center mb-12">
+                                <div className="inline-block relative">
+                                    <div className="w-32 h-32 bg-gradient-to-br from-purple-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                                        <Code size={48} className="text-white relative z-10" />
+                                        <div className="absolute -top-2 -right-2">
+                                            <Sparkles size={20} className="text-yellow-300 animate-pulse" />
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-4 bg-purple-500/30 rounded-full blur-md"></div>
                                 </div>
+                                
+                                <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 bg-clip-text text-transparent">
+                                    CodeVM
+                                </h1>
+                                <p className="text-xl text-white/80 mb-2">Your Gateway to Cloud Development</p>
+                                <p className="text-sm text-white/60">Powerful virtual machines for coding, testing, and deployment</p>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="space-y-4 max-w-md mx-auto">
+                                <button 
+                                    onClick={handleUserLoginClick} 
+                                    className="group w-full relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-gradient-to-r from-purple-500 to-blue-600 shadow-lg shadow-purple-500/30"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative flex items-center justify-center space-x-3">
+                                        <User size={24} className="text-white" />
+                                        <span className="text-white font-semibold text-lg">User Login</span>
+                                    </div>
+                                </button>
+                                
+                                <button 
+                                    onClick={handleAdminLoginClick} 
+                                    className="group w-full relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-gradient-to-r from-green-500 to-teal-500 shadow-lg shadow-green-500/30"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative flex items-center justify-center space-x-3">
+                                        <Shield size={24} className="text-white" />
+                                        <span className="text-white font-semibold text-lg">Admin Login</span>
+                                    </div>
+                                </button>
+                                
+                                <button 
+                                    onClick={handleRegisterClick} 
+                                    className="group w-full relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-gradient-to-r from-pink-500 to-red-500 shadow-lg shadow-pink-500/30"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative flex items-center justify-center space-x-3">
+                                        <LogIn size={24} className="text-white" />
+                                        <span className="text-white font-semibold text-lg">Create Account</span>
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="text-center mt-12 text-white/60">
+                                <p className="text-sm">Secure • Fast • Reliable</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                {/* CSS Animation */}
-                <style jsx>{`
-                    @keyframes float {
-                        0%, 100% { transform: translateY(0px) rotate(0deg); }
-                        50% { transform: translateY(-20px) rotate(180deg); }
-                    }
-                `}</style>
             </div>
         );
     }
 
     // Login/Register screen
     return (
-        <div style={customStyles.backgroundGradient} className="d-flex align-items-center justify-content-center position-relative overflow-hidden">
-            {/* Floating background elements */}
-            <div 
-                className="position-absolute rounded-circle opacity-20"
-                style={{
-                    width: '200px',
-                    height: '200px',
-                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                    top: '10%',
-                    right: '10%',
-                    filter: 'blur(30px)',
-                    animation: 'float 8s ease-in-out infinite'
-                }}
-            ></div>
-            <div 
-                className="position-absolute rounded-circle opacity-15"
-                style={{
-                    width: '180px',
-                    height: '180px',
-                    background: 'linear-gradient(45deg, #56ab2f, #a8e6cf)',
-                    bottom: '15%',
-                    left: '15%',
-                    filter: 'blur(30px)',
-                    animation: 'float 10s ease-in-out infinite reverse'
-                }}
-            ></div>
+        <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
+            {/* Animated background */}
+            <div className="absolute inset-0">
+                <div className="absolute w-72 h-72 rounded-full opacity-20 animate-pulse bg-gradient-to-br from-purple-500 to-blue-600 top-20 right-20 blur-3xl" style={{ animationDuration: '6s' }}></div>
+                <div className="absolute w-60 h-60 rounded-full opacity-15 animate-pulse bg-gradient-to-br from-green-500 to-teal-500 bottom-32 left-32 blur-3xl" style={{ animationDuration: '8s', animationDelay: '2s' }}></div>
+            </div>
 
-            <div className="container">
-                <div className="row justify-content-center">
-                    <div className="col-md-6 col-lg-5 col-xl-4">
-                        <div 
-                            className="card border-0 rounded-4 p-4"
-                            style={customStyles.cardGlass}
+            <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+                <div className="w-full max-w-md">
+                    <div className="backdrop-blur-2xl bg-white/10 rounded-3xl border border-white/20 p-8 shadow-2xl relative">
+                        {/* Header glow */}
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-60 rounded-full"></div>
+                        
+                        {/* Back button */}
+                        <button
+                            className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors mb-6 group"
+                            onClick={handleBackToLanding}
                         >
-                            <div className="card-body">
-                                <button
-                                    className="btn btn-link text-light d-flex align-items-center mb-4 fw-semibold p-0"
-                                    onClick={handleBackToLanding}
-                                    style={{textDecoration: 'none'}}
-                                >
-                                    <ArrowLeft size={20} className="me-2" /> Back
-                                </button>
+                            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                            <span>Back</span>
+                        </button>
 
-                                {/* Logo */}
-                               <div className="text-center">
-                        <img src="/codevm_logo.svg" alt="CodeVM Logo" className="auth-logo mb-4" />
-                      
-                    </div>
-                                <h2 className="text-center mb-4 fw-bold" style={customStyles.textGradient}>
-                                    {isLoginMode ? 'Login to CodeVM' : 'Join CodeVM'}
-                                </h2>
-
-                            
-
-                                <form onSubmit={handleSubmit}>
-                                    {!isLoginMode && (
-                                        <div className="mb-4">
-                                            <label htmlFor="name" className="form-label text-light fw-semibold">Name</label>
-                                            <input
-                                                type="text"
-                                                className="form-control rounded-pill py-3 px-4"
-                                                style={customStyles.formControl}
-                                                id="name"
-                                                value={name}
-                                                onChange={(e) => setName(e.target.value)}
-                                                placeholder="Enter your name"
-                                                required
-                                                onFocus={(e) => e.target.style.boxShadow = '0 0 0 0.2rem rgba(102, 126, 234, 0.25)'}
-                                                onBlur={(e) => e.target.style.boxShadow = 'none'}
-                                            />
-                                        </div>
-                                    )}
-                                    
-                                    <div className="mb-4">
-                                        <label htmlFor="email" className="form-label text-light fw-semibold">Email address</label>
-                                        <input
-                                            type="email"
-                                            className="form-control rounded-pill py-3 px-4"
-                                            style={customStyles.formControl}
-                                            id="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email"
-                                            required
-                                            onFocus={(e) => e.target.style.boxShadow = '0 0 0 0.2rem rgba(102, 126, 234, 0.25)'}
-                                            onBlur={(e) => e.target.style.boxShadow = 'none'}
-                                        />
-                                    </div>
-                                    
-                                    <div className="mb-4">
-                                        <label htmlFor="password" className="form-label text-light fw-semibold">Password</label>
-                                        <input
-                                            type="password"
-                                            className="form-control rounded-pill py-3 px-4"
-                                            style={customStyles.formControl}
-                                            id="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="Enter your password"
-                                            required
-                                            onFocus={(e) => e.target.style.boxShadow = '0 0 0 0.2rem rgba(102, 126, 234, 0.25)'}
-                                            onBlur={(e) => e.target.style.boxShadow = 'none'}
-                                        />
-                                    </div>
-                                    
-                                    <div className="d-grid mt-4">
-                                        <button 
-                                            type="submit" 
-                                            className="btn btn-lg rounded-pill py-3 fw-bold text-white"
-                                            style={customStyles.btnPrimary}
-                                            onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
-                                            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                        >
-                                            {isLoginMode ? 'Login' : 'Register'}
-                                        </button>
-                                    </div>
-                                </form>
-                                
-                                <p className="text-center text-light mt-4 mb-0">
-                                    {isLoginMode ? "Don't have an account?" : "Already have an account?"}{' '}
-                                    <button
-                                        onClick={() => { setIsLoginMode(!isLoginMode); setCurrentAuthMessage(''); }}
-                                        className="btn btn-link p-0 border-0 fw-semibold"
-                                        style={{color: '#0dcaf0', textDecoration: 'underline'}}
-                                    >
-                                        {isLoginMode ? 'Register here' : 'Login here'}
-                                    </button>
-                                </p>
+                        {/* Logo */}
+                        <div className="text-center mb-8">
+                            <div className="inline-block relative">
+                                <div className="w-20 h-20 bg-gradient-to-br from-purple-400 via-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-xl relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                                    <Code size={32} className="text-white relative z-10" />
+                                </div>
+                                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-12 h-2 bg-purple-500/30 rounded-full blur-sm"></div>
                             </div>
+                            
+                            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
+                                {isLoginMode ? 'Welcome Back' : 'Join CodeVM'}
+                            </h2>
+                            <p className="text-white/60 text-sm">
+                                {isLoginMode ? 'Sign in to your account' : 'Create your account to get started'}
+                            </p>
+                        </div>
+
+                        {currentAuthMessage && (
+                            <div className="mb-6 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 text-sm text-center">
+                                {currentAuthMessage}
+                            </div>
+                        )}
+
+                        <div className="space-y-6">
+                            {!isLoginMode && (
+                                <div className="group">
+                                    <label className="block text-white/80 text-sm font-medium mb-2">
+                                        Full Name
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-purple-400 focus:bg-white/15 transition-all duration-300"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Enter your full name"
+                                            required
+                                        />
+                                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/20 to-blue-400/20 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="group">
+                                <label className="block text-white/80 text-sm font-medium mb-2">
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-purple-400 focus:bg-white/15 transition-all duration-300"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Enter your email"
+                                        required
+                                    />
+                                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/20 to-blue-400/20 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                                </div>
+                            </div>
+                            
+                            <div className="group">
+                                <label className="block text-white/80 text-sm font-medium mb-2">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="password"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-purple-400 focus:bg-white/15 transition-all duration-300"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Enter your password"
+                                        required
+                                    />
+                                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/20 to-blue-400/20 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={handleSubmit}
+                                className="group w-full relative overflow-hidden rounded-xl py-3 px-4 font-semibold text-white transition-all duration-300 hover:scale-105 bg-gradient-to-r from-purple-500 to-blue-600 shadow-lg shadow-purple-500/40 hover:shadow-purple-500/60"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="relative flex items-center justify-center space-x-2">
+                                    <Lock size={18} />
+                                    <span>{isLoginMode ? 'Sign In' : 'Create Account'}</span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div className="text-center mt-6">
+                            <p className="text-white/60 text-sm">
+                                {isLoginMode ? "Don't have an account?" : "Already have an account?"}{' '}
+                                <button
+                                    onClick={() => { setIsLoginMode(!isLoginMode); setCurrentAuthMessage(''); }}
+                                    className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                                >
+                                    {isLoginMode ? 'Sign up here' : 'Sign in here'}
+                                </button>
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            {/* CSS Animation */}
+
             <style jsx>{`
                 @keyframes float {
                     0%, 100% { transform: translateY(0px) rotate(0deg); }
-                    50% { transform: translateY(-15px) rotate(180deg); }
+                    50% { transform: translateY(-10px) rotate(180deg); }
                 }
             `}</style>
         </div>
