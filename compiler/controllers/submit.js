@@ -24,7 +24,8 @@ const submit = async (req, res) => {
     }
 
     let filePath;
-    let inputFilePath;
+    let inputFil
+    ePath;
     let outputFilePath;
 
     try {
