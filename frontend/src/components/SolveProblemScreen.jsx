@@ -398,7 +398,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 
                 .console-container {
                     flex-shrink: 0;
-                    height: 25%; /* MODIFIED: Reduced from 35% to give more space to the editor */
+                    height: 40%; /* MODIFIED: Increased height for a larger console view */
                     display: flex;
                     flex-direction: column;
                     transition: height 0.3s ease-in-out;
