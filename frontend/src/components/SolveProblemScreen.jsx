@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'https://esm.sh/react';
+import axios from 'https://esm.sh/axios';
 import {
     XCircle, Code, Send, Play, CheckCircle2, AlertTriangle, Clock, MemoryStick
-} from 'lucide-react';
-import CodeMirror from '@uiw/react-codemirror';
-import { cpp } from '@codemirror/lang-cpp';
-import { java } from '@codemirror/lang-java';
-import { python } from '@codemirror/lang-python';
-import { okaidia } from '@uiw/codemirror-theme-okaidia';
-import ReactMarkdown from 'react-markdown';
+} from 'https://esm.sh/lucide-react';
+import CodeMirror from 'https://esm.sh/@uiw/react-codemirror?external=react,react-dom';
+import { cpp } from 'https://esm.sh/@codemirror/lang-cpp';
+import { java } from 'https://esm.sh/@codemirror/lang-java';
+import { python } from 'https://esm.sh/@codemirror/lang-python';
+import { okaidia } from 'https://esm.sh/@uiw/codemirror-theme-okaidia';
+import ReactMarkdown from 'https://esm.sh/react-markdown?external=react';
+
 
 // API URLs
-const api_url = import.meta.env.VITE_SERVER;
-const api_com = import.meta.env.VITE_COMPILER;
+// MODIFIED: Replaced environment variables with placeholder strings to resolve errors.
+// You should replace these with your actual backend and compiler URLs.
+const api_url = 'http://localhost:5000'; // Example: Your backend server URL
+const api_com = 'http://localhost:2358'; // Example: Your code execution engine URL
 const SUBMISSION_API_BASE_URL = `${api_url}/api/submissions`;
 const COMPILER_RUN_URL = `${api_com}/run`;
 const DRAFT_API_BASE_URL = `${api_url}/api/drafts`;
@@ -72,28 +75,22 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
     const [verdicts, setVerdicts] = useState([]);
     const [totalTime, setTotalTime] = useState(null);
     const [testResults, setTestResults] = useState([]);
-
-    // State for AI review content and loading status
     const [aiReviewContent, setAiReviewContent] = useState('');
     const [isAIRunning, setIsAIRunning] = useState(false);
 
-    // Initialize with boilerplate code
     useEffect(() => {
         if (!code) {
             setCode(getBoilerplateCode(language));
         }
     }, []);
 
-    // Update boilerplate when language changes (only if code is empty or is boilerplate)
     useEffect(() => {
         const currentBoilerplate = getBoilerplateCode(language);
-        // Only update if code is empty or matches previous language boilerplate
         if (!code.trim() || code === getBoilerplateCode('cpp') || code === getBoilerplateCode('java') || code === getBoilerplateCode('python')) {
             setCode(currentBoilerplate);
         }
     }, [language]);
 
-    // --- Draft Persistence Logic ---
     const debounce = (func, delay) => {
         let timeout;
         return function (...args) {
@@ -108,7 +105,6 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
-
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post(DRAFT_API_BASE_URL, {
                 problemId: currentProblemId,
@@ -117,7 +113,6 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
             }, config);
         } catch (error) {
             console.error('Error saving draft:', error);
-            // Don't show error to user for draft saving failures
         }
     }, 1000), [isAuthenticated]);
 
@@ -127,19 +122,16 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
-
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const response = await axios.get(`${DRAFT_API_BASE_URL}/${problem._id}`, config);
                 if (response.data.draft && response.data.draft.code) {
                     setCode(response.data.draft.code);
                     setLanguage(response.data.draft.language || 'cpp');
                 } else {
-                    // No draft found, use boilerplate
                     setCode(getBoilerplateCode(language));
                 }
             } catch (error) {
                 console.error('Error loading draft:', error);
-                // Use boilerplate if draft loading fails
                 setCode(getBoilerplateCode(language));
             }
         };
@@ -152,7 +144,6 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         }
     }, [code, language, problem, isAuthenticated, saveDraft]);
 
-    // --- Event Handlers ---
     const handleRunCode = async () => {
         setCompileMessage('');
         setOutputStdout('');
@@ -172,14 +163,21 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         };
 
         try {
-            const response = await axios.post(COMPILER_RUN_URL, runData);
+            // NEW: Added a timeout to the custom run as well.
+            const response = await axios.post(COMPILER_RUN_URL, runData, { timeout: 15000 });
             setCompileMessage(response.data.error ? 'Compilation Error' : 'Successfully Executed');
             setOutputStdout(response.data.output || response.data.error || '');
         } catch (error) {
             console.error('Run error:', error);
-            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Error during custom run.';
-            setCompileMessage('Execution Failed');
-            setOutputStdout(errorMessage);
+            // NEW: Added specific timeout handling for the custom run.
+            if (error.code === 'ECONNABORTED') {
+                 setCompileMessage('Execution Failed');
+                 setOutputStdout('Execution timed out. Your code took too long to run with the custom input.');
+            } else {
+                const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Error during custom run.';
+                setCompileMessage('Execution Failed');
+                setOutputStdout(errorMessage);
+            }
         } finally {
             setIsRunningCustomTest(false);
         }
@@ -203,6 +201,14 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         setTotalTime(null);
         setActiveTab('verdict');
 
+        const infiniteLoopPatterns = [/while\s*\(\s*true\s*\)/, /for\s*\(\s*;\s*;\s*\)/];
+        if (infiniteLoopPatterns.some(pattern => pattern.test(code))) {
+            setSubmissionMessage("Submission cancelled: Your code appears to contain an infinite loop (e.g., 'while(true)').");
+            setFinalVerdict('Review Code');
+            setIsSubmitting(false);
+            return;
+        }
+
         const submissionData = {
             problemId: problem._id,
             code: code.trim(),
@@ -217,7 +223,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
 
             const config = {
                 headers: { Authorization: `Bearer ${token}` },
-                timeout: 30000 // 30 second timeout
+                timeout: 30000 
             };
 
             const response = await axios.post(SUBMISSION_API_BASE_URL, submissionData, config);
@@ -233,23 +239,30 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         } catch (error) {
             console.error('Submission error:', error);
             let errorMessage = 'Submission failed. Please try again.';
-
-            if (error.response) {
+            
+            if (error.code === 'ECONNABORTED') {
+                errorMessage = "Request timed out after 30 seconds. This often means your code has an infinite loop or is too inefficient.";
+                setSubmissionMessage(`Submission failed: ${errorMessage}`);
+                setFinalVerdict('Time Limit Exceeded');
+            } else if (error.response) {
                 errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
+                setSubmissionMessage(`Submission failed: ${errorMessage}`);
+                setFinalVerdict('Error');
             } else if (error.request) {
                 errorMessage = 'Network error. Please check your connection.';
+                setSubmissionMessage(`Submission failed: ${errorMessage}`);
+                setFinalVerdict('Error');
             } else {
                 errorMessage = error.message || 'An unexpected error occurred.';
+                setSubmissionMessage(`Submission failed: ${errorMessage}`);
+                setFinalVerdict('Error');
             }
 
-            setSubmissionMessage(`Submission failed: ${errorMessage}`);
-            setFinalVerdict('Error');
         } finally {
             setIsSubmitting(false);
         }
     };
-
-    // --- AI Integration Logic ---
+    
     const handleGetAIReview = async () => {
         if (!code || !code.trim()) {
             setAiReviewContent('Please write some code before requesting a review.');
@@ -269,7 +282,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
 
         try {
             const response = await axios.post(AI_REVIEW_API_URL, reviewData, {
-                timeout: 60000 // 60 second timeout for AI requests
+                timeout: 60000
             });
 
             if (response.data && response.data.review) {
@@ -490,7 +503,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 }
                 
                 .action-bar { 
-                    padding: 0.5rem 1.5rem; /* MODIFIED: Reduced vertical padding */
+                    padding: 0.5rem 1.5rem;
                     background: rgba(255, 255, 255, 0.03);
                     border-top: 1px solid var(--border-color);
                     border-bottom: 1px solid var(--border-color);
@@ -526,7 +539,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 
                 .btn-modern {
                     border: none;
-                    padding: 0.6rem 1.5rem; /* MODIFIED: Reduced button padding */
+                    padding: 0.6rem 1.5rem;
                     border-radius: 50px;
                     font-weight: 600;
                     font-size: 0.9rem;
@@ -772,7 +785,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
 
                         <div className="panel-right">
                             <div className="panel-right-inner">
-                                <div className="d-flex justify-content-between align-items-center py-2 px-3" style={{ /* MODIFIED: Changed p-3 to py-2 px-3 */
+                                <div className="d-flex justify-content-between align-items-center py-2 px-3" style={{
                                     background: 'rgba(255, 255, 255, 0.03)',
                                     borderBottom: '1px solid var(--border-color)'
                                 }}>
@@ -1002,7 +1015,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                                                                     fontWeight: '700',
                                                                     fontSize: '1.1rem',
                                                                     color: finalVerdict === 'Accepted' ? '#34d399' :
-                                                                        finalVerdict === 'Error' ? '#f87171' : 'var(--accent-color)'
+                                                                        finalVerdict === 'Error' || finalVerdict === 'Time Limit Exceeded' ? '#f87171' : 'var(--accent-color)'
                                                                 }}>
                                                                     {finalVerdict === 'Accepted' && <CheckCircle2 size={18} className="me-2" />}
                                                                     {finalVerdict === 'Error' && <XCircle size={18} className="me-2" />}
