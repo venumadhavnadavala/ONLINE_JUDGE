@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'https://esm.sh/react';
+import axios from 'https://esm.sh/axios';
 import {
     XCircle, Code, Send, Play, CheckCircle2, AlertTriangle, Clock, MemoryStick
-} from 'lucide-react';
-// MODIFIED: Imports changed to use a CDN to resolve build errors.
+} from 'https://esm.sh/lucide-react';
 import CodeMirror from 'https://esm.sh/@uiw/react-codemirror?external=react,react-dom';
 import { cpp } from 'https://esm.sh/@codemirror/lang-cpp';
 import { java } from 'https://esm.sh/@codemirror/lang-java';
@@ -13,8 +12,10 @@ import ReactMarkdown from 'https://esm.sh/react-markdown?external=react';
 
 
 // API URLs
-const api_url = import.meta.env.VITE_SERVER;
-const api_com = import.meta.env.VITE_COMPILER;
+// MODIFIED: Replaced Vite env variables with placeholder strings.
+// You will need to replace these with your actual backend and compiler URLs.
+const api_url = 'http://localhost:5000';
+const api_com = 'http://localhost:2358';
 const SUBMISSION_API_BASE_URL = `${api_url}/api/submissions`;
 const COMPILER_RUN_URL = `${api_com}/run`;
 const DRAFT_API_BASE_URL = `${api_url}/api/drafts`;
@@ -1109,7 +1110,6 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                                                     </div>
                                                 ) : (
                                                     <div className="markdown-content">
-                                                        {/* FIXED: Corrected the closing tag from </HTMLDListElement> to </ReactMarkdown> */}
                                                         <ReactMarkdown>
                                                             {aiReviewContent || "Click 'AI Review' button to get intelligent feedback on your code including suggestions for optimization, best practices, and potential improvements."}
                                                         </ReactMarkdown>
