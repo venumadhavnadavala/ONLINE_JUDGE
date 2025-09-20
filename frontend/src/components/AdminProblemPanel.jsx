@@ -1,5 +1,3 @@
-
-
 // frontend/src/components/AdminProblemPanel.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -312,9 +310,138 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
         problem.tags.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase())) || filterTag === ''
     );
 
-
     return (
         <div className="py-5" style={{ minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+        {/*
+            =========================================================================
+            FIX: The entire comment block below is now wrapped in { ... }
+            which is the correct syntax for multi-line comments inside JSX.
+            =========================================================================
+        */}
+        {/*
+            * =========================================================================
+            * UI ENHANCEMENT NOTES:
+            * The following JSX has been updated to match the provided image.
+            * For the full visual effect, add the following styles to your CSS file:
+            *
+            * body {
+            * background-color: #0f0c29;
+            * background-image: linear-gradient(to right top, #0c0a1f, #1a1a36, #282a4d, #363c66, #454e80);
+            * color: #e0e0e0;
+            * }
+            *
+            * .problem-card {
+            * background: rgba(22, 22, 38, 0.7);
+            * border: 1px solid #3a3a5a;
+            * border-radius: 12px;
+            * padding: 1.5rem;
+            * transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            * display: flex;
+            * flex-direction: column;
+            * height: 100%;
+            * }
+            *
+            * .problem-card:hover {
+            * transform: translateY(-5px);
+            * box-shadow: 0 8px 30px rgba(78, 78, 255, 0.2);
+            * }
+            *
+            * .problem-card .qid {
+            * color: #a0a0c0;
+            * font-weight: 500;
+            * font-size: 0.9rem;
+            * }
+            *
+            * .problem-card .problem-title {
+            * color: #ffffff;
+            * font-size: 1.25rem;
+            * font-weight: 600;
+            * margin-top: 0.5rem;
+            * }
+            *
+            * .problem-card .tags-container {
+            * display: flex;
+            * flex-wrap: wrap;
+            * gap: 0.5rem;
+            * margin-top: 1rem;
+            * }
+            *
+            * .problem-card .tag {
+            * background-color: #3a3a5a;
+            * color: #c0c0e0;
+            * padding: 0.25rem 0.75rem;
+            * border-radius: 12px;
+            * font-size: 0.75rem;
+            * }
+            *
+            * .problem-card .info-footer {
+            * margin-top: 1.5rem;
+            * margin-bottom: 1.5rem;
+            * display: flex;
+            * align-items: center;
+            * gap: 1rem;
+            * flex-grow: 1; 
+            * }
+            *
+            * .difficulty-easy, .difficulty-medium, .difficulty-hard {
+            * padding: 0.3rem 1rem;
+            * border-radius: 12px;
+            * font-weight: 600;
+            * font-size: 0.8rem;
+            * text-transform: uppercase;
+            * }
+            *
+            * .difficulty-easy { background-color: rgba(25, 135, 84, 0.2); color: #198754; }
+            * .difficulty-medium { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
+            * .difficulty-hard { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
+            *
+            * .problem-card .time-limit {
+            * color: #a0a0c0;
+            * font-size: 0.9rem;
+            * }
+            *
+            * .btn-view, .btn-solve {
+            * width: 100%;
+            * padding: 0.6rem;
+            * border-radius: 8px;
+            * border: none;
+            * font-weight: 600;
+            * transition: background-color 0.2s;
+            * }
+            *
+            * .btn-view { background-color: #0d6efd; color: white; }
+            * .btn-view:hover { background-color: #0b5ed7; }
+            *
+            * .btn-solve { background-color: #dc3545; color: white; }
+            * .btn-solve:hover { background-color: #bb2d3b; }
+            *
+            * .search-bar-container {
+            * display: flex;
+            * gap: 1rem;
+            * background-color: #161626;
+            * padding: 0.75rem;
+            * border-radius: 12px;
+            * border: 1px solid #3a3a5a;
+            * }
+            *
+            * .search-bar-container .search-input {
+            * flex-grow: 1;
+            * background-color: transparent;
+            * border: none;
+            * color: white;
+            * }
+            * .search-bar-container .search-input:focus { box-shadow: none; }
+            *
+            * .filter-dropdown {
+            * background-color: #2a2a4a;
+            * color: #e0e0e0;
+            * border: 1px solid #3a3a5a;
+            * border-radius: 8px;
+            * padding: 0.5rem 1rem;
+            * }
+            *
+            * =========================================================================
+        */}
             <div className="container">
 
                 {message && (
@@ -363,7 +490,6 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                 <div className="problem-card">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <span className="qid">QID {index + 1}</span>
-                                        {/* "Solved/Unsolved" status intentionally omitted per instructions */}
                                         {isAdmin && (
                                            <div className="admin-actions d-flex gap-2">
                                                 <button onClick={() => openEditProblemModal(problem)} className="btn btn-sm btn-outline-warning p-1" style={{width: '28px', height: '28px'}} title="Edit">
@@ -421,7 +547,6 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                              </div>
                              <form onSubmit={handleProblemSubmit}>
                                  <div className="modal-body row g-3 p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                     {/* ... Form inputs ... */}
                                     <div className="col-md-6">
                                         <label htmlFor="title" className="form-label text-light fw-semibold">Title</label>
                                         <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required />
@@ -464,7 +589,6 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                     </div>
                                      {formMode === 'edit' && currentProblem && (
                                          <div className="col-12 mt-5">
-                                            {/* ... Test Cases Section ... */}
                                          </div>
                                      )}
                                  </div>
