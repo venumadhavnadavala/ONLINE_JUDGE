@@ -634,16 +634,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 <div className="container-fluid px-4 py-3">
                     <header className="pb-3 mb-3 d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
-                            <div style={{
-                                width: '50px',
-                                height: '50px',
-                                background: 'var(--accent-gradient)',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginRight: '1rem'
-                            }}>
+                            
                                 <img src="/codevm_logo.svg" 
                              alt="CodeVM Logo" 
                              className="logo-image" 
@@ -653,7 +644,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                                  filter: 'drop-shadow(0 0 10px rgba(167, 112, 239, 0.3))',
                                  transition: 'filter 0.3s ease'
                              }} />
-                            </div>
+                            
                             <h1 style={{
                                 fontSize: '1.8rem',
                                 fontWeight: '800',
