@@ -647,3 +647,4 @@ function AuthScreen({ onLogin, onRegister, message }) {
         </>
     );
 }
+export default AuthScreen;
