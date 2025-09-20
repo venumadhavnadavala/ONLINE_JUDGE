@@ -644,7 +644,15 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                                 justifyContent: 'center',
                                 marginRight: '1rem'
                             }}>
-                                <Code size={24} color="white" />
+                                <img src="/codevm_logo.svg" 
+                             alt="CodeVM Logo" 
+                             className="logo-image" 
+                             style={{ 
+                                 maxWidth: '38px', 
+                                 height: 'auto',
+                                 filter: 'drop-shadow(0 0 10px rgba(167, 112, 239, 0.3))',
+                                 transition: 'filter 0.3s ease'
+                             }} />
                             </div>
                             <h1 style={{
                                 fontSize: '1.8rem',
@@ -655,7 +663,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                                 WebkitTextFillColor: 'transparent',
                                 backgroundClip: 'text'
                             }}>
-                                CodeVM IDE
+                                CodeVM
                             </h1>
                         </div>
                         <button
