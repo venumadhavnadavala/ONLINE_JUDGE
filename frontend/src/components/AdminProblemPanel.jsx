@@ -1,4 +1,6 @@
+// frontend/src/components/AdminProblemPanel.jsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
     PlusCircle,
     SquarePen,
@@ -13,103 +15,14 @@ import {
     LogOut,
     Search,
     Tag,
-    Gauge,
-    Code,
-    Trophy,
-    Target,
-    TrendingUp,
-    Calendar,
-    Clock,
-    Filter,
-    Zap,
-    BookOpen,
-    Award
+    Gauge
 } from 'lucide-react';
+const api_url = import.meta.env.VITE_SERVER;
+// Base URL for your backend API
+const API_BASE_URL = ` ${api_url}/api/problems`;
 
-// Mock data for demo purposes
-const mockProblems = [
-    {
-        _id: '1',
-        title: 'Two Sum Array Problem',
-        statement: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-        input: 'nums = [2,7,11,15], target = 9',
-        output: '[0,1]',
-        constraints: '2 <= nums.length <= 10^4',
-        timeLimit: 1,
-        memoryLimit: 256,
-        difficulty: 'Easy',
-        tags: ['Array', 'Hash Table', 'Two Pointers'],
-        solved: true
-    },
-    {
-        _id: '2',
-        title: 'Longest Palindromic Substring',
-        statement: 'Given a string s, return the longest palindromic substring in s.',
-        input: 's = "babad"',
-        output: '"bab"',
-        constraints: '1 <= s.length <= 1000',
-        timeLimit: 2,
-        memoryLimit: 512,
-        difficulty: 'Medium',
-        tags: ['String', 'Dynamic Programming'],
-        solved: false
-    },
-    {
-        _id: '3',
-        title: 'Merge k Sorted Lists',
-        statement: 'You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.',
-        input: 'lists = [[1,4,5],[1,3,4],[2,6]]',
-        output: '[1,1,2,3,4,4,5,6]',
-        constraints: 'k == lists.length',
-        timeLimit: 3,
-        memoryLimit: 1024,
-        difficulty: 'Hard',
-        tags: ['Linked List', 'Divide and Conquer', 'Heap'],
-        solved: false
-    },
-    {
-        _id: '4',
-        title: 'Binary Tree Inorder Traversal',
-        statement: 'Given the root of a binary tree, return the inorder traversal of its nodes values.',
-        input: 'root = [1,null,2,3]',
-        output: '[1,3,2]',
-        constraints: 'The number of nodes in the tree is in the range [0, 100]',
-        timeLimit: 1,
-        memoryLimit: 256,
-        difficulty: 'Easy',
-        tags: ['Stack', 'Tree', 'Depth-First Search'],
-        solved: true
-    },
-    {
-        _id: '5',
-        title: 'Valid Parentheses',
-        statement: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.',
-        input: 's = "()[]{}"',
-        output: 'true',
-        constraints: '1 <= s.length <= 10^4',
-        timeLimit: 1,
-        memoryLimit: 256,
-        difficulty: 'Easy',
-        tags: ['String', 'Stack'],
-        solved: false
-    },
-    {
-        _id: '6',
-        title: 'Maximum Subarray',
-        statement: 'Given an integer array nums, find the contiguous subarray which has the largest sum and return its sum.',
-        input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]',
-        output: '6',
-        constraints: '1 <= nums.length <= 10^5',
-        timeLimit: 2,
-        memoryLimit: 512,
-        difficulty: 'Medium',
-        tags: ['Array', 'Dynamic Programming', 'Divide and Conquer'],
-        solved: false
-    }
-];
-
-function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout, onSolveProblem }) {
-    const [problems, setProblems] = useState(mockProblems);
+function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem }) {
+    const [problems, setProblems] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProblem, setCurrentProblem] = useState(null);
     const [formMode, setFormMode] = useState('create');
@@ -130,7 +43,7 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
     const [testCaseIsHidden, setTestCaseIsHidden] = useState(true);
     const [testCasePoints, setTestCasePoints] = useState(0);
 
-    // Problem Form state
+    // Problem Form state (existing)
     const [title, setTitle] = useState('');
     const [statement, setStatement] = useState('');
     const [input, setInput] = useState('');
@@ -143,31 +56,33 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
 
     // Filter state
     const [filterTag, setFilterTag] = useState('');
-    const [difficultyFilter, setDifficultyFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
 
-    const isAdmin = userRole === 'admin';
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchProblems();
+        } else {
+            setProblems([]);
+        }
+    }, [isAuthenticated]);
 
-    // Calculate statistics
-    const totalProblems = problems.length;
-    const solvedProblems = problems.filter(p => p.solved).length;
-    const easyProblems = problems.filter(p => p.difficulty === 'Easy').length;
-    const mediumProblems = problems.filter(p => p.difficulty === 'Medium').length;
-    const hardProblems = problems.filter(p => p.difficulty === 'Hard').length;
+    const fetchProblems = async () => {
+        console.log(`Attempting to fetch problems from: ${API_BASE_URL}`);
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.get(API_BASE_URL, config);
+            setProblems(response.data);
+        } catch (error) {
+            console.error('Error fetching problems:', error);
+            setMessage('Failed to fetch problems. Please ensure the backend server is running and you are logged in.');
+        }
+    };
 
-    // Filtered problems based on filters
-    const filteredProblems = problems.filter(problem => {
-        const matchesTag = filterTag === '' || problem.tags.some(tag => 
-            tag.toLowerCase().includes(filterTag.toLowerCase())
-        );
-        const matchesDifficulty = difficultyFilter === '' || problem.difficulty === difficultyFilter;
-        const matchesStatus = statusFilter === '' || 
-            (statusFilter === 'solved' && problem.solved) ||
-            (statusFilter === 'unsolved' && !problem.solved);
-        
-        return matchesTag && matchesDifficulty && matchesStatus;
-    });
-
+    // --- Problem CRUD Handlers (Existing) ---
     const resetProblemForm = () => {
         setTitle('');
         setStatement('');
@@ -201,6 +116,7 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
         setDifficulty(problem.difficulty);
         setTags(problem.tags.join(', '));
         setIsModalOpen(true);
+        fetchTestCases(problem._id);
     };
 
     const openViewProblemModal = (problem) => {
@@ -216,937 +132,398 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
         setProblemToDeleteId(null);
         setCurrentProblem(null);
         resetProblemForm();
+        resetTestCaseForm();
+        setTestCases([]);
         setMessage('');
     };
 
-    const handleSolveProblem = (problem) => {
-        if (onSolveProblem) {
-            onSolveProblem(problem);
-        } else {
-            alert(`Opening solve interface for: ${problem.title}`);
+    const handleProblemSubmit = async (e) => {
+        e.preventDefault();
+        setMessage('');
+
+        const problemData = {
+            title,
+            statement,
+            input,
+            output,
+            constraints,
+            timeLimit: Number(timeLimit),
+            memoryLimit: Number(memoryLimit),
+            difficulty,
+            tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+        };
+
+        console.log('Submitting problem data:', problemData);
+
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            if (formMode === 'create') {
+                await axios.post(API_BASE_URL, problemData, config);
+                setMessage('Problem created successfully!');
+            } else {
+                await axios.put(`${API_BASE_URL}/${currentProblem._id}`, problemData, config);
+                setMessage('Problem updated successfully!');
+            }
+            fetchProblems();
+            closeAllModals();
+        } catch (error) {
+            console.error('Error submitting problem:', error);
+            setMessage(`Failed to ${formMode} problem: ${error.response?.data?.message || error.message}`);
         }
     };
 
+    const openConfirmDeleteProblemModal = (id) => {
+        setProblemToDeleteId(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleDeleteProblem = async () => {
+        if (!problemToDeleteId) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.delete(`${API_BASE_URL}/${problemToDeleteId}`, config);
+            setMessage('Problem deleted successfully!');
+            fetchProblems();
+            closeAllModals();
+            } catch (error) {
+                console.error('Error deleting problem:', error);
+                setMessage(`Failed to delete problem: ${error.response?.data?.message || error.message}`);
+                closeAllModals();
+            }
+        };
+
+        // --- Test Case CRUD Handlers (Existing) ---
+        const fetchTestCases = async (problemId) => {
+            try {
+                const token = localStorage.getItem('token');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                const response = await axios.get(`${API_BASE_URL}/${problemId}/testcases`, config);
+                setTestCases(response.data);
+            } catch (error) {
+                console.error('Error fetching test cases:', error);
+                setMessage('Failed to fetch test cases.');
+            }
+        };
+
+        const resetTestCaseForm = () => {
+            setTestCaseInput('');
+            setTestCaseOutput('');
+            setTestCaseIsHidden(true);
+            setTestCasePoints(0);
+            setCurrentTestCase(null);
+        };
+
+    const openCreateTestCaseModal = () => {
+        setTestCaseFormMode('create');
+        resetTestCaseForm();
+        setIsTestCaseModalOpen(true);
+    };
+
+    const openEditTestCaseModal = (testCase) => {
+        setTestCaseFormMode('edit');
+        setCurrentTestCase(testCase);
+        setTestCaseInput(testCase.input);
+        setTestCaseOutput(testCase.output);
+        setTestCaseIsHidden(testCase.isHidden);
+        setTestCasePoints(testCase.points);
+        setIsTestCaseModalOpen(true);
+    };
+
+    const handleTestCaseSubmit = async (e) => {
+        e.preventDefault();
+        setMessage('');
+
+        if (!currentProblem || !currentProblem._id) {
+            setMessage('Error: Select a problem first to manage test cases.');
+            return;
+        }
+
+        const testCaseData = {
+            input: testCaseInput,
+            output: testCaseOutput,
+            isHidden: testCaseIsHidden,
+            points: Number(testCasePoints),
+        };
+
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            if (testCaseFormMode === 'create') {
+                await axios.post(`${API_BASE_URL}/${currentProblem._id}/testcases`, testCaseData, config);
+                setMessage('Test case created successfully!');
+            } else {
+                await axios.put(`${API_BASE_URL}/${currentProblem._id}/testcases/${currentTestCase._id}`, testCaseData, config);
+                setMessage('Test case updated successfully!');
+            }
+            fetchTestCases(currentProblem._id);
+            setIsTestCaseModalOpen(false);
+            resetTestCaseForm();
+        } catch (error) {
+            console.error('Error submitting test case:', error);
+            setMessage(`Failed to ${testCaseFormMode} test case: ${error.response?.data?.message || error.message}`);
+        }
+    };
+
+    const handleDeleteTestCase = async (testCaseId) => {
+        if (!currentProblem || !currentProblem._id) {
+            setMessage('Error: Select a problem first to delete test cases.');
+            return;
+        }
+        if (window.confirm('Are you sure you want to delete this test case?')) {
+            try {
+                const token = localStorage.getItem('token');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await axios.delete(`${API_BASE_URL}/${currentProblem._id}/testcases/${testCaseId}`, config);
+                setMessage('Test case deleted successfully!');
+                fetchTestCases(currentProblem._id);
+            } catch (error) {
+                console.error('Error deleting test case:', error);
+                setMessage(`Failed to delete test case: ${error.response?.data?.message || error.message}`);
+            }
+        }
+    };
+
+    const isAdmin = userRole === 'admin';
+
+    // Filtered problems based on tag input
+    const filteredProblems = problems.filter(problem =>
+        problem.tags.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase())) || filterTag === ''
+    );
+
     return (
-        <div style={{
-            background: 'linear-gradient(135deg, #0f0f23 0%, #1e1e2e 50%, #2d1b69 100%)',
-            minHeight: '100vh',
-            color: 'white'
-        }}>
-            <div className="container py-5">
+        <div className="bg-dark min-vh-100 py-5">
+            <div className="container">
+                {/* Removed the duplicate header from here */}
+
                 {message && (
-                    <div className="alert alert-info mb-4" 
-                         style={{ 
-                             background: 'rgba(0, 212, 255, 0.1)', 
-                             border: '1px solid rgba(0, 212, 255, 0.3)', 
-                             color: '#93c5fd', 
-                             borderRadius: '12px' 
-                         }}>
+                    <div className="alert alert-info alert-dismissible fade show mb-4 rounded-3" role="alert">
                         {message}
-                        <button type="button" className="btn-close" onClick={() => setMessage('')} 
-                                style={{ filter: 'invert(1)' }}></button>
+                        <button type="button" className="btn-close" onClick={() => setMessage('')} aria-label="Close"></button>
                     </div>
                 )}
-
-                {/* Hero Header */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #ec4899 100%)',
-                    borderRadius: '24px',
-                    padding: '3rem 2rem',
-                    marginBottom: '3rem',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
-                    <div style={{
-                        content: '',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1))',
-                        opacity: 0.5
-                    }}></div>
-                    <div className="row align-items-center" style={{ position: 'relative', zIndex: 2 }}>
-                        <div className="col-lg-8">
-                            <div className="d-flex align-items-center mb-3">
-                                <Target size={48} className="me-3" />
-                                <h1 style={{ fontSize: '3rem', fontWeight: '800', margin: 0 }}>Problem Dashboard</h1>
-                            </div>
-                            <p style={{ fontSize: '1.2rem', opacity: 0.9, fontWeight: '300', margin: 0 }}>
-                                Master algorithms, solve challenges, and track your coding journey step by step
-                            </p>
-                        </div>
-                        <div className="col-lg-4">
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                padding: '2rem',
-                                backdropFilter: 'blur(15px)',
-                                textAlign: 'center'
-                            }}>
-                                <div style={{
-                                    width: '120px',
-                                    height: '120px',
-                                    borderRadius: '50%',
-                                    background: `conic-gradient(#00d4ff 0deg ${solvedProblems/totalProblems * 360}deg, rgba(255,255,255,0.1) ${solvedProblems/totalProblems * 360}deg 360deg)`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    margin: '0 auto 1rem auto'
-                                }}>
-                                    <div style={{
-                                        width: '90px',
-                                        height: '90px',
-                                        background: '#1e1e2e',
-                                        borderRadius: '50%',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexDirection: 'column'
-                                    }}>
-                                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#00d4ff' }}>
-                                            {solvedProblems}/{totalProblems}
-                                        </div>
-                                        <div style={{ fontSize: '0.9rem', color: '#a5b4fc' }}>
-                                            Solved
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Statistics Cards */}
-                <div className="row g-4 mb-4">
-                    <div className="col-lg-3 col-md-6">
-                        <div style={{
-                            background: 'rgba(30, 30, 46, 0.8)',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
-                            borderRadius: '20px',
-                            padding: '1.5rem',
-                            textAlign: 'center',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: '700' }}>{easyProblems}</div>
-                            <div style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>Easy Problems</div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div style={{
-                            background: 'rgba(30, 30, 46, 0.8)',
-                            border: '1px solid rgba(245, 158, 11, 0.3)',
-                            borderRadius: '20px',
-                            padding: '1.5rem',
-                            textAlign: 'center',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: '700' }}>{mediumProblems}</div>
-                            <div style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>Medium Problems</div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div style={{
-                            background: 'rgba(30, 30, 46, 0.8)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '20px',
-                            padding: '1.5rem',
-                            textAlign: 'center',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            <div style={{ color: '#ef4444', fontSize: '2rem', fontWeight: '700' }}>{hardProblems}</div>
-                            <div style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>Hard Problems</div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div style={{
-                            background: 'rgba(30, 30, 46, 0.8)',
-                            border: '1px solid rgba(0, 212, 255, 0.3)',
-                            borderRadius: '20px',
-                            padding: '1.5rem',
-                            textAlign: 'center',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            <div style={{ color: '#00d4ff', fontSize: '2rem', fontWeight: '700' }}>{Math.round((solvedProblems/totalProblems) * 100)}%</div>
-                            <div style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>Success Rate</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filters and Search */}
-                <div className="row mb-4">
-                    <div className="col-lg-6">
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '50px',
-                            padding: '0.8rem 2rem',
-                            backdropFilter: 'blur(10px)',
-                            display: 'flex',
-                            alignItems: 'center'
-                        }}>
-                            <Search size={20} className="me-3" style={{ color: '#00d4ff' }} />
-                            <input
-                                type="text"
-                                placeholder="Search tags: array, dp, hash, tree..."
-                                value={filterTag}
-                                onChange={(e) => setFilterTag(e.target.value)}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    outline: 'none',
-                                    color: 'white',
-                                    width: '100%',
-                                    fontSize: '1rem'
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-lg-6">
-                        <div className="d-flex gap-3">
-                            <select 
-                                value={difficultyFilter} 
-                                onChange={(e) => setDifficultyFilter(e.target.value)}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '25px',
-                                    color: 'white',
-                                    padding: '0.5rem 1rem',
-                                    outline: 'none'
-                                }}
-                            >
-                                <option value="">All Difficulties</option>
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                            <select 
-                                value={statusFilter} 
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '25px',
-                                    color: 'white',
-                                    padding: '0.5rem 1rem',
-                                    outline: 'none'
-                                }}
-                            >
-                                <option value="">All Problems</option>
-                                <option value="solved">Solved</option>
-                                <option value="unsolved">Unsolved</option>
-                            </select>
+                
+ {/* new line */}
+                <div className="card card-themed shadow-lg mb-5 rounded-3">
+                    <div className="card-body p-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h2 className="h4 text mb-0 fw-semibold">Problems List</h2>
                             {isAdmin && (
                                 <button
                                     onClick={openCreateProblemModal}
-                                    style={{
-                                        background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-                                        border: 'none',
-                                        color: 'white',
-                                        padding: '0.8rem 2rem',
-                                        borderRadius: '50px',
-                                        fontWeight: '700',
-                                        fontSize: '1rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 8px 30px rgba(0, 212, 255, 0.3)'
-                                    }}
+                                    className="btn btn-lg btn-primary-gradient d-flex align-items-center justify-content-center px-4 py-2 fw-bold rounded-pill"
                                 >
-                                    <PlusCircle size={20} />
-                                    Add Problem
+                                    <PlusCircle className="me-2" style={{ width: '1.25rem', height: '1.25rem' }} /> Add New Problem
                                 </button>
                             )}
                         </div>
+
+                        {/* Filter by Tags Input */}
+                        <div className="mb-4">
+                            <div className="input-group input-group-lg">
+                                <span className="input-group-text bg-dark border-secondary text-info rounded-start-pill"><Search size={20} /></span>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-themed rounded-end-pill"
+                                    placeholder="Filter by Tags (e.g., array, dp, hash)"
+                                    value={filterTag}
+                                    onChange={(e) => setFilterTag(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {problems.length === 0 ? (
+                            <div className="text-center text-muted py-5 border border-secondary rounded-3 card-themed">
+                                <p className="mb-0 fs-5">
+                                    {isAuthenticated ? 'No problems found. Start by adding one (if admin) or check back later!' : 'Please log in to view problems.'}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                {filteredProblems.map((problem) => (
+                                    <div className="col" key={problem._id}>
+                                        <div className="card card-themed h-100 shadow-sm rounded-3 border-secondary">
+                                            <div className="card-body d-flex flex-column">
+                                                <h5 className="card-title text fw-bold mb-2">{problem.title}</h5>
+                                                <div className="d-flex align-items-center mb-3">
+                                                    <span className={`badge rounded-pill me-2 ${
+                                                        problem.difficulty === 'Easy' ? 'bg-success' :
+                                                        problem.difficulty === 'Medium' ? 'bg-warning text-dark' :
+                                                        'bg-danger'
+                                                    } px-3 py-2`}>
+                                                        <Gauge size={14} className="me-1" /> {problem.difficulty}
+                                                    </span>
+                                                    {problem.tags.length > 0 && (
+                                                        <span className="text-muted small d-flex align-items-center">
+                                                            <Tag size={14} className="me-1" />
+                                                            {problem.tags.map((tag, index) => (
+                                                                <span key={index} className="badge bg-info text-dark me-1 rounded-pill">{tag}</span>
+                                                            ))}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="card-text text small flex-grow-1">{problem.statement.substring(0, 100)}...</p>
+                                                <div className="d-flex justify-content-end gap-2 mt-3">
+                                                    <button
+                                                        onClick={() => openViewProblemModal(problem)}
+                                                        className="btn btn-outline-info btn-sm rounded-pill px-3"
+                                                        title="View Problem"
+                                                    >
+                                                        <Eye size={16} className="me-1" /> View
+                                                    </button>
+                                                    {isAdmin && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openEditProblemModal(problem)}
+                                                                className="btn btn-outline-warning btn-sm rounded-pill px-3"
+                                                                title="Edit Problem"
+                                                            >
+                                                                <SquarePen size={16} className="me-1" /> Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openConfirmDeleteProblemModal(problem._id)}
+                                                                className="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                                                title="Delete Problem"
+                                                            >
+                                                                <Trash size={16} className="me-1" /> Delete
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {!isAdmin && isAuthenticated && (
+                                                        <button
+                                                            onClick={() => onSolveProblem(problem)}
+                                                            className="btn btn-success-gradient btn-sm rounded-pill px-3 fw-bold"
+                                                            title="Solve Problem"
+                                                        >
+                                                            Solve
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Problems Grid */}
-                {filteredProblems.length === 0 ? (
-                    <div className="text-center py-5">
-                        <div style={{
-                            background: 'rgba(30, 30, 46, 0.8)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            padding: '3rem',
-                            maxWidth: '500px',
-                            margin: '0 auto'
-                        }}>
-                            <Code size={64} className="mb-3" style={{ color: '#00d4ff', opacity: 0.5 }} />
-                            <h3 style={{ color: '#a5b4fc' }}>No Problems Found</h3>
-                            <p style={{ color: '#6b7280' }}>
-                                {isAuthenticated ? 'Try adjusting your filters or add new problems!' : 'Please log in to view problems.'}
-                            </p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="row g-4">
-                        {filteredProblems.map((problem, index) => (
-                            <div className="col-lg-4 col-md-6" key={problem._id}>
-                                <div style={{
-                                    background: 'rgba(30, 30, 46, 0.8)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '20px',
-                                    padding: '2rem',
-                                    backdropFilter: 'blur(10px)',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    height: '100%',
-                                    transition: 'all 0.4s ease',
-                                    cursor: 'pointer'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-8px)';
-                                    e.currentTarget.style.borderColor = 'rgba(0, 212, 255, 0.3)';
-                                    e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 212, 255, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}>
-                                    <div style={{
-                                        content: '',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '4px',
-                                        background: 'linear-gradient(90deg, #00d4ff, #7c3aed, #ec4899)'
-                                    }}></div>
-
-                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                        <div style={{
-                                            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                            fontWeight: '800',
-                                            fontSize: '1.1rem'
-                                        }}>
-                                            QID {index + 1}
-                                        </div>
-                                        <div>
-                                            {problem.solved ? (
-                                                <div style={{
-                                                    background: 'linear-gradient(135deg, #10b981, #34d399)',
-                                                    color: 'white',
-                                                    padding: '0.4rem 1rem',
-                                                    borderRadius: '20px',
-                                                    fontWeight: '600',
-                                                    fontSize: '0.9rem',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.3rem'
-                                                }}>
-                                                    <CheckCircle size={16} />
-                                                    Solved
-                                                </div>
-                                            ) : (
-                                                <div style={{
-                                                    background: 'rgba(236, 72, 153, 0.2)',
-                                                    border: '1px solid rgba(236, 72, 153, 0.3)',
-                                                    color: '#f9a8d4',
-                                                    padding: '0.4rem 1rem',
-                                                    borderRadius: '20px',
-                                                    fontWeight: '600',
-                                                    fontSize: '0.9rem',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.3rem'
-                                                }}>
-                                                    <Trophy size={16} />
-                                                    Unsolved
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <h3 style={{
-                                        fontSize: '1.3rem',
-                                        fontWeight: '700',
-                                        color: '#00d4ff',
-                                        marginBottom: '1rem'
-                                    }}>{problem.title}</h3>
-
-                                    {problem.tags.length > 0 && (
-                                        <div style={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: '0.5rem',
-                                            margin: '1rem 0'
-                                        }}>
-                                            {problem.tags.map((tag, tagIndex) => (
-                                                <span key={tagIndex} style={{
-                                                    background: 'rgba(124, 58, 237, 0.2)',
-                                                    border: '1px solid rgba(124, 58, 237, 0.3)',
-                                                    color: '#a78bfa',
-                                                    padding: '0.3rem 0.8rem',
-                                                    borderRadius: '15px',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: '500'
-                                                }}>{tag}</span>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <div style={{
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '50px',
-                                            fontWeight: '600',
-                                            fontSize: '0.9rem',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.3rem',
-                                            background: problem.difficulty === 'Easy' ? 'linear-gradient(135deg, #10b981, #34d399)' :
-                                                       problem.difficulty === 'Medium' ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' :
-                                                       'linear-gradient(135deg, #ef4444, #f87171)',
-                                            color: 'white'
-                                        }}>
-                                            <Gauge size={14} />
-                                            {problem.difficulty.toUpperCase()}
-                                        </div>
-                                        <div className="d-flex align-items-center gap-2" 
-                                             style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>
-                                            <Clock size={14} />
-                                            {problem.timeLimit}s
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '0.8rem', marginTop: '1.5rem' }}>
-                                        <button
-                                            onClick={() => openViewProblemModal(problem)}
-                                            style={{
-                                                background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-                                                border: 'none',
-                                                color: 'white',
-                                                padding: '0.6rem 1.5rem',
-                                                borderRadius: '25px',
-                                                fontWeight: '600',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                flex: 1,
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(0)';
-                                                e.currentTarget.style.boxShadow = 'none';
-                                            }}
-                                        >
-                                            <Eye size={16} />
-                                            View
-                                        </button>
-                                        {!isAdmin && isAuthenticated && (
-                                            <button
-                                                onClick={() => handleSolveProblem(problem)}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                                                    border: 'none',
-                                                    color: 'white',
-                                                    padding: '0.6rem 1.5rem',
-                                                    borderRadius: '25px',
-                                                    fontWeight: '600',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.5rem',
-                                                    flex: 1,
-                                                    justifyContent: 'center',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.3s ease'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                            >
-                                                <Zap size={16} />
-                                                Solve
-                                            </button>
-                                        )}
-                                        {isAdmin && (
-                                            <>
-                                                <button
-                                                    onClick={() => openEditProblemModal(problem)}
-                                                    style={{
-                                                        background: 'rgba(245, 158, 11, 0.2)',
-                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
-                                                        color: '#fbbf24',
-                                                        padding: '0.6rem',
-                                                        borderRadius: '20px',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
-                                                    }}
-                                                >
-                                                    <SquarePen size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setProblemToDeleteId(problem._id);
-                                                        setIsConfirmModalOpen(true);
-                                                    }}
-                                                    style={{
-                                                        background: 'rgba(239, 68, 68, 0.2)',
-                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                        color: '#f87171',
-                                                        padding: '0.6rem',
-                                                        borderRadius: '20px',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
-                                                    }}
-                                                >
-                                                    <Trash size={16} />
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Problem View Modal */}
-                {isViewModalOpen && currentProblem && (
-                    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-                        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                            <div style={{
-                                background: 'rgba(15, 15, 35, 0.95)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                color: 'white'
-                            }}>
-                                <div className="modal-header border-0 p-4">
-                                    <h5 className="modal-title fw-bold" style={{ color: '#00d4ff' }}>
-                                        {currentProblem.title}
-                                    </h5>
-                                    <button 
-                                        type="button" 
-                                        onClick={closeAllModals}
-                                        style={{
-                                            background: 'rgba(239, 68, 68, 0.2)',
-                                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                                            color: '#f87171',
-                                            fontSize: '1.2rem',
-                                            cursor: 'pointer',
-                                            padding: '0.3rem 0.8rem',
-                                            borderRadius: '50px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <XCircle size={18} />
-                                    </button>
-                                </div>
-                                <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                    <div className="row mb-4">
-                                        <div className="col-md-4">
-                                            <div style={{
-                                                padding: '0.5rem 1rem',
-                                                borderRadius: '50px',
-                                                fontWeight: '600',
-                                                fontSize: '0.9rem',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '0.3rem',
-                                                background: currentProblem.difficulty === 'Easy' ? 'linear-gradient(135deg, #10b981, #34d399)' :
-                                                           currentProblem.difficulty === 'Medium' ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' :
-                                                           'linear-gradient(135deg, #ef4444, #f87171)',
-                                                color: 'white'
-                                            }}>
-                                                <Gauge size={14} />
-                                                {currentProblem.difficulty}
-                                            </div>
-                                        </div>
-                                        <div className="col-md-4">
-                                            <div style={{ color: '#a5b4fc' }}>
-                                                <Clock size={16} className="me-2" />
-                                                Time: {currentProblem.timeLimit}s
-                                            </div>
-                                        </div>
-                                        <div className="col-md-4">
-                                            <div style={{ color: '#a5b4fc' }}>
-                                                Memory: {currentProblem.memoryLimit}MB
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <strong style={{ color: '#00d4ff' }}>Tags:</strong>
-                                        <div className="d-flex flex-wrap gap-2 mt-2">
-                                            {currentProblem.tags.map((tag, index) => (
-                                                <span key={index} style={{
-                                                    background: 'rgba(124, 58, 237, 0.2)',
-                                                    border: '1px solid rgba(124, 58, 237, 0.3)',
-                                                    color: '#a78bfa',
-                                                    padding: '0.3rem 0.8rem',
-                                                    borderRadius: '15px',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: '500'
-                                                }}>
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '2rem 0' }} />
-
-                                    <h6 style={{ color: '#00d4ff', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                        Problem Statement:
-                                    </h6>
-                                    <div style={{
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        padding: '1rem',
-                                        marginBottom: '2rem',
-                                        fontFamily: 'monospace',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {currentProblem.statement}
-                                    </div>
-
-                                    <h6 style={{ color: '#00d4ff', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                        Input Format:
-                                    </h6>
-                                    <div style={{
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        padding: '1rem',
-                                        marginBottom: '2rem',
-                                        fontFamily: 'monospace',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {currentProblem.input}
-                                    </div>
-
-                                    <h6 style={{ color: '#00d4ff', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                        Output Format:
-                                    </h6>
-                                    <div style={{
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        padding: '1rem',
-                                        marginBottom: '2rem',
-                                        fontFamily: 'monospace',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {currentProblem.output}
-                                    </div>
-
-                                    <h6 style={{ color: '#00d4ff', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                        Constraints:
-                                    </h6>
-                                    <div style={{
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        padding: '1rem',
-                                        marginBottom: '2rem',
-                                        fontFamily: 'monospace',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {currentProblem.constraints}
-                                    </div>
-                                </div>
-                                <div className="modal-footer border-0 p-4">
-                                    <button
-                                        onClick={closeAllModals}
-                                        style={{
-                                            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-                                            border: 'none',
-                                            color: 'white',
-                                            padding: '0.8rem 2rem',
-                                            borderRadius: '50px',
-                                            fontWeight: '700',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Create/Edit Problem Modal (Admin Only) */}
+                {/* Problem Create/Edit Modal (Admin Only) */}
                 {isModalOpen && isAdmin && (
-                    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                    <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
                         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                            <div style={{
-                                background: 'rgba(15, 15, 35, 0.95)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                color: 'white'
-                            }}>
-                                <div className="modal-header border-0 p-4">
-                                    <h5 className="modal-title fw-bold" style={{ color: '#00d4ff' }}>
-                                        {formMode === 'create' ? 'Create New Problem' : 'Edit Problem'}
-                                    </h5>
-                                    <button 
-                                        type="button" 
-                                        onClick={closeAllModals}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: 'white',
-                                            fontSize: '1.5rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >×</button>
+                            <div className="modal-content card-themed shadow-lg rounded-4 border-secondary">
+                                <div className="modal-header bg-dark text-white rounded-top-4 border-secondary">
+                                    <h5 className="modal-title fw-bold" style={{ color: 'var(--primary-accent)' }}>{formMode === 'create' ? 'Create New Problem' : 'Edit Problem'}</h5>
+                                    <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} aria-label="Close"></button>
                                 </div>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    setMessage(`Problem ${formMode}d successfully!`);
-                                    closeAllModals();
-                                }}>
-                                    <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                        <div className="row g-3">
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Title
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={title}
-                                                    onChange={(e) => setTitle(e.target.value)}
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Difficulty
-                                                </label>
-                                                <select
-                                                    value={difficulty}
-                                                    onChange={(e) => setDifficulty(e.target.value)}
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none'
-                                                    }}
-                                                >
-                                                    <option value="Easy">Easy</option>
-                                                    <option value="Medium">Medium</option>
-                                                    <option value="Hard">Hard</option>
-                                                </select>
-                                            </div>
-                                            <div className="col-12">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Problem Statement
-                                                </label>
-                                                <textarea
-                                                    value={statement}
-                                                    onChange={(e) => setStatement(e.target.value)}
-                                                    rows="5"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none',
-                                                        resize: 'vertical'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Input Format
-                                                </label>
-                                                <textarea
-                                                    value={input}
-                                                    onChange={(e) => setInput(e.target.value)}
-                                                    rows="3"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none',
-                                                        resize: 'vertical'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Output Format
-                                                </label>
-                                                <textarea
-                                                    value={output}
-                                                    onChange={(e) => setOutput(e.target.value)}
-                                                    rows="3"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none',
-                                                        resize: 'vertical'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-12">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Constraints
-                                                </label>
-                                                <textarea
-                                                    value={constraints}
-                                                    onChange={(e) => setConstraints(e.target.value)}
-                                                    rows="3"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none',
-                                                        resize: 'vertical'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Time Limit (seconds)
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={timeLimit}
-                                                    onChange={(e) => setTimeLimit(e.target.value)}
-                                                    min="1"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Memory Limit (MB)
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={memoryLimit}
-                                                    onChange={(e) => setMemoryLimit(e.target.value)}
-                                                    min="1"
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="col-12">
-                                                <label className="form-label" style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                                                    Tags (comma-separated)
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={tags}
-                                                    onChange={(e) => setTags(e.target.value)}
-                                                    placeholder="e.g., Array, DP, Graph"
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px',
-                                                        color: 'white',
-                                                        padding: '0.8rem 1rem',
-                                                        width: '100%',
-                                                        outline: 'none'
-                                                    }}
-                                                />
-                                            </div>
+                                <form onSubmit={handleProblemSubmit}>
+                                    <div className="modal-body row g-3 p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                                        <div className="col-md-6">
+                                            <label htmlFor="title" className="form-label text-light fw-semibold">Title</label>
+                                            <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required />
                                         </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="difficulty" className="form-label text-light fw-semibold">Difficulty</label>
+                                            <select id="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="form-select form-select-lg form-select-themed rounded-pill" required>
+                                                <option value="Easy">Easy</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="Hard">Hard</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-12">
+                                            <label htmlFor="statement" className="form-label text-light fw-semibold">Problem Statement</label>
+                                            <textarea id="statement" value={statement} onChange={(e) => setStatement(e.target.value)} rows="5" className="form-control form-control-themed rounded-3" required></textarea>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="input" className="form-label text-light fw-semibold">Input Format</label>
+                                            <textarea id="input" value={input} onChange={(e) => setInput(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="output" className="form-label text-light fw-semibold">Output Format</label>
+                                            <textarea id="output" value={output} onChange={(e) => setOutput(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
+                                        </div>
+                                        <div className="col-12">
+                                            <label htmlFor="constraints" className="form-label text-light fw-semibold">Constraints</label>
+                                            <textarea id="constraints" value={constraints} onChange={(e) => setConstraints(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="timeLimit" className="form-label text-light fw-semibold">Time Limit (seconds)</label>
+                                            <input type="number" id="timeLimit" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required min="1" />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="memoryLimit" className="form-label text-light fw-semibold">Memory Limit (MB)</label>
+                                            <input type="number" id="memoryLimit" value={memoryLimit} onChange={(e) => setMemoryLimit(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required min="1" />
+                                        </div>
+                                        <div className="col-12">
+                                            <label htmlFor="tags" className="form-label text-light fw-semibold">Tags (comma-separated)</label>
+                                            <input type="text" id="tags" value={tags} onChange={(e) => setTags(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" placeholder="e.g., Array, DP, Graph" />
+                                        </div>
+
+                                        {/* Test Cases Section within Problem Edit Modal */}
+                                        {formMode === 'edit' && currentProblem && (
+                                            <div className="col-12 mt-5">
+                                                <h4 className="mb-3 d-flex align-items-center text-info">
+                                                    <FlaskConical size={24} className="me-2" /> Test Cases for "{currentProblem.title}"
+                                                </h4>
+                                                <div className="d-flex justify-content-end mb-3">
+                                                    <button onClick={openCreateTestCaseModal} type="button" className="btn btn-outline-success d-flex align-items-center rounded-pill px-3 py-2">
+                                                        <PlusCircle size={16} className="me-2" /> Add Test Case
+                                                    </button>
+                                                </div>
+                                                {testCases.length === 0 ? (
+                                                    <div className="alert alert-secondary text-center card-themed text-muted border-secondary rounded-3" role="alert">No test cases found for this problem.</div>
+                                                ) : (
+                                                    <div className="table-responsive">
+                                                        <table className="table table-sm table-bordered table-hover align-middle table-themed">
+                                                            <thead className="table-secondary">
+                                                                <tr>
+                                                                    <th className="text-white">#</th>
+                                                                    <th className="text-white">Input</th>
+                                                                    <th className="text-white">Output</th>
+                                                                    <th className="text-white">Hidden</th>
+                                                                    <th className="text-white">Points</th>
+                                                                    <th className="text-white">Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {testCases.map((tc, index) => (
+                                                                    <tr key={tc._id}>
+                                                                        <td className="text-light">{index + 1}</td>
+                                                                        <td><pre className="mb-0 small bg-dark p-1 rounded border border-secondary text-light">{tc.input}</pre></td>
+                                                                        <td><pre className="mb-0 small bg-dark p-1 rounded border border-secondary text-light">{tc.output}</pre></td>
+                                                                        <td>
+                                                                            {tc.isHidden ? <XCircle size={20} className="text-danger" /> : <CheckCircle size={20} className="text-success" />}
+                                                                        </td>
+                                                                        <td>{tc.points}</td>
+                                                                        <td>
+                                                                            <div className="d-flex gap-1">
+                                                                                <button onClick={() => openEditTestCaseModal(tc)} type="button" className="btn btn-sm btn-outline-warning rounded-circle" title="Edit Test Case" style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                    <SquarePen size={14} />
+                                                                                </button>
+                                                                                <button onClick={() => handleDeleteTestCase(tc._id)} type="button" className="btn btn-sm btn-outline-danger rounded-circle" title="Delete Test Case" style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                    <Trash size={14} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="modal-footer border-0 p-4">
-                                        <button
-                                            type="button"
-                                            onClick={closeAllModals}
-                                            style={{
-                                                background: 'rgba(255, 255, 255, 0.1)',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                color: 'white',
-                                                padding: '0.8rem 2rem',
-                                                borderRadius: '50px',
-                                                fontWeight: '600',
-                                                cursor: 'pointer',
-                                                marginRight: '1rem'
-                                            }}
-                                        >
+                                    <div className="modal-footer justify-content-center border-top-0 pt-0">
+                                        <button type="button" onClick={closeAllModals} className="btn btn-secondary btn-lg rounded-pill px-4">
                                             Cancel
                                         </button>
-                                        <button
-                                            type="submit"
-                                            style={{
-                                                background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-                                                border: 'none',
-                                                color: 'white',
-                                                padding: '0.8rem 2rem',
-                                                borderRadius: '50px',
-                                                fontWeight: '700',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
+                                        <button type="submit" className="btn btn-primary-gradient btn-lg rounded-pill px-4 fw-bold">
                                             {formMode === 'create' ? 'Create Problem' : 'Update Problem'}
                                         </button>
                                     </div>
@@ -1156,71 +533,138 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
                     </div>
                 )}
 
-                {/* Delete Confirmation Modal */}
-                {isConfirmModalOpen && isAdmin && (
-                    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-                        <div className="modal-dialog modal-sm modal-dialog-centered">
-                            <div style={{
-                                background: 'rgba(15, 15, 35, 0.95)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                color: 'white'
-                            }}>
-                                <div className="modal-header border-0 p-4">
-                                    <h5 className="modal-title fw-bold" style={{ color: '#ef4444' }}>
-                                        Confirm Deletion
+                {/* Test Case Create/Edit Modal (NEW) */}
+                {isTestCaseModalOpen && isAdmin && currentProblem && (
+                    <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                            <div className="modal-content card-themed shadow-lg rounded-4 border-secondary">
+                                <div className="modal-header bg-dark text-white rounded-top-4 border-secondary">
+                                    <h5 className="modal-title fw-bold" style={{ color: 'var(--success-accent)' }}>
+                                        {testCaseFormMode === 'create' ? 'Add New Test Case' : 'Edit Test Case'} for "{currentProblem.title}"
                                     </h5>
-                                    <button 
-                                        type="button" 
-                                        onClick={closeAllModals}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: 'white',
-                                            fontSize: '1.5rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >×</button>
+                                    <button type="button" className="btn-close btn-close-white" onClick={() => setIsTestCaseModalOpen(false)} aria-label="Close"></button>
                                 </div>
-                                <div className="modal-body p-4 text-center">
-                                    <p style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>
-                                        Are you sure you want to delete this problem?
-                                    </p>
-                                    <p style={{ color: '#ef4444', fontWeight: 'bold' }}>
-                                        This action cannot be undone.
-                                    </p>
+                                <form onSubmit={handleTestCaseSubmit}>
+                                    <div className="modal-body row g-3 p-4">
+                                        <div className="col-12">
+                                            <label htmlFor="testCaseInput" className="form-label text-light fw-semibold">Input</label>
+                                            <textarea id="testCaseInput" value={testCaseInput} onChange={(e) => setTestCaseInput(e.target.value)} className="form-control form-control-themed rounded-3" required rows="5"></textarea>
+                                        </div>
+                                        <div className="col-12">
+                                            <label htmlFor="testCaseOutput" className="form-label text-light fw-semibold">Output</label>
+                                            <textarea id="testCaseOutput" value={testCaseOutput} onChange={(e) => setTestCaseOutput(e.target.value)} className="form-control form-control-themed rounded-3" required rows="5"></textarea>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label htmlFor="testCasePoints" className="form-label text-light fw-semibold">Points</label>
+                                            <input type="number" id="testCasePoints" value={testCasePoints} onChange={(e) => setTestCasePoints(e.target.value)} className="form-control form-control-themed rounded-pill" required min="0" />
+                                        </div>
+                                        <div className="col-md-6 d-flex align-items-center">
+                                            <div className="form-check form-switch mt-4">
+                                                <input className="form-check-input" type="checkbox" id="testCaseIsHidden" checked={testCaseIsHidden} onChange={(e) => setTestCaseIsHidden(e.target.checked)} />
+                                                <label className="form-check-label text-light fw-semibold" htmlFor="testCaseIsHidden">Hidden Test Case</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer justify-content-center border-top-0 pt-0">
+                                        <button type="button" onClick={() => setIsTestCaseModalOpen(false)} className="btn btn-secondary btn-lg rounded-pill px-4">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-success-gradient btn-lg rounded-pill px-4 fw-bold">
+                                            {testCaseFormMode === 'create' ? 'Add Test Case' : 'Update Test Case'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Problem View Modal (Accessible by both Admin and User) */}
+                {isViewModalOpen && currentProblem && (
+                    <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                            <div className="modal-content card-themed shadow-lg rounded-4 border-secondary">
+                                <div className="modal-header bg-dark text-white rounded-top-4 border-secondary">
+                                    <h5 className="modal-title fw-bold" style={{ color: 'var(--primary-accent)' }}>{currentProblem.title}</h5>
+                                    <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} aria-label="Close"></button>
                                 </div>
-                                <div className="modal-footer border-0 p-4">
+                                <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                                    <div className="row mb-3">
+                                        <div className="col-md-4">
+                                            <p className="mb-1 text"><strong>Difficulty:</strong></p>
+                                            <span className={`badge rounded-pill ${
+                                                currentProblem.difficulty === 'Easy' ? 'bg-success' :
+                                                currentProblem.difficulty === 'Medium' ? 'bg-warning text-dark' :
+                                                'bg-danger'
+                                            } px-3 py-2`}>
+                                                <Gauge size={14} className="me-1" /> {currentProblem.difficulty}
+                                            </span>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <p className="mb-1 text"><strong>Time Limit:</strong></p>
+                                            <span className="fw-bold text-info">{currentProblem.timeLimit}</span> seconds
+                                        </div>
+                                        <div className="col-md-4">
+                                            <p className="mb-1 text"><strong>Memory Limit:</strong></p>
+                                            <span className="fw-bold text-info">{currentProblem.memoryLimit}</span> MB
+                                        </div>
+                                    </div>
+                                    <p className="mb-3 text"><strong>Tags:</strong> {currentProblem.tags.length > 0 ? (
+                                        currentProblem.tags.map((tag, index) => (
+                                            <span key={index} className="badge bg-info text-dark me-1 rounded-pill"><Tag size={12} className="me-1" />{tag}</span>
+                                        ))
+                                    ) : (
+                                        <span className="fst-italic">None</span>
+                                    )}</p>
+                                    <hr className="my-4 border-secondary" />
+                                    <h6 className="mt-3 fw-bold text-info">Problem Statement:</h6>
+                                    <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6">{currentProblem.statement}</pre>
+                                    <h6 className="mt-4 fw-bold text-info">Input Format:</h6>
+                                    <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6">{currentProblem.input}</pre>
+                                    <h6 className="mt-4 fw-bold text-info">Output Format:</h6>
+                                    <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6">{currentProblem.output}</pre>
+                                    <h6 className="mt-4 fw-bold text-info">Constraints:</h6>
+                                    <pre className="bg-dark p-3 rounded border border-secondary text-light fs-6">{currentProblem.constraints}</pre>
+                                </div>
+                                <div className="modal-footer justify-content-center border-top-0 pt-0">
                                     <button
+                                        type="button"
                                         onClick={closeAllModals}
-                                        style={{
-                                            background: 'rgba(255, 255, 255, 0.1)',
-                                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                                            color: 'white',
-                                            padding: '0.8rem 2rem',
-                                            borderRadius: '50px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            marginRight: '1rem'
-                                        }}
+                                        className="btn btn-primary-gradient btn-lg rounded-pill px-4 fw-bold"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Custom Confirmation Modal for Deletion (Admin Only) */}
+                {isConfirmModalOpen && isAdmin && (
+                    <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                        <div className="modal-dialog modal-sm modal-dialog-centered">
+                            <div className="modal-content card-themed shadow-lg rounded-3 border-secondary">
+                                <div className="modal-header bg-dark text-white rounded-top-3 border-secondary">
+                                    <h5 className="modal-title fw-bold text-danger">Confirm Deletion</h5>
+                                    <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} aria-label="Close"></button>
+                                </div>
+                                <div className="modal-body text-center p-4">
+                                    <p className="mb-4 fs-5 text-light">Are you sure you want to delete this problem?</p>
+                                    <p className="text-danger fw-bold">This action cannot be undone.</p>
+                                </div>
+                                <div className="modal-footer justify-content-center border-top-0 pt-0">
+                                    <button
+                                        type="button"
+                                        onClick={closeAllModals}
+                                        className="btn btn-secondary btn-lg rounded-pill px-4"
                                     >
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            setMessage('Problem deleted successfully!');
-                                            closeAllModals();
-                                        }}
-                                        style={{
-                                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                                            border: 'none',
-                                            color: 'white',
-                                            padding: '0.8rem 2rem',
-                                            borderRadius: '50px',
-                                            fontWeight: '700',
-                                            cursor: 'pointer'
-                                        }}
+                                        type="button"
+                                        onClick={handleDeleteProblem}
+                                        className="btn btn-danger btn-lg rounded-pill px-4 fw-bold"
                                     >
                                         Delete
                                     </button>
@@ -1230,8 +674,10 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
                     </div>
                 )}
             </div>
-        </div>
-    );
-}
+            </div>
+        );
+    }
 
-export default AdminProblemPanel;
+export default AdminProblemPanel; // FIX: Added export default
+
+
