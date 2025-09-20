@@ -744,13 +744,20 @@ function AdminProblemPanel({ userRole = 'user', isAuthenticated = true, onLogout
                                         type="button" 
                                         onClick={closeAllModals}
                                         style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: 'white',
-                                            fontSize: '1.5rem',
-                                            cursor: 'pointer'
+                                            background: 'rgba(239, 68, 68, 0.2)',
+                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                            color: '#f87171',
+                                            fontSize: '1.2rem',
+                                            cursor: 'pointer',
+                                            padding: '0.3rem 0.8rem',
+                                            borderRadius: '50px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
                                         }}
-                                    >×</button>
+                                    >
+                                        <XCircle size={18} />
+                                    </button>
                                 </div>
                                 <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                                     <div className="row mb-4">
