@@ -398,7 +398,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 
                 .console-container {
                     flex-shrink: 0;
-                    height: 40%; /* MODIFIED: Increased height for a larger console view */
+                    height: 40%; 
                     display: flex;
                     flex-direction: column;
                     transition: height 0.3s ease-in-out;
@@ -490,7 +490,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 }
                 
                 .action-bar { 
-                    padding: 1rem 1.5rem; 
+                    padding: 0.5rem 1.5rem; /* MODIFIED: Reduced vertical padding */
                     background: rgba(255, 255, 255, 0.03);
                     border-top: 1px solid var(--border-color);
                     border-bottom: 1px solid var(--border-color);
@@ -526,7 +526,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 
                 .btn-modern {
                     border: none;
-                    padding: 0.8rem 1.8rem;
+                    padding: 0.6rem 1.5rem; /* MODIFIED: Reduced button padding */
                     border-radius: 50px;
                     font-weight: 600;
                     font-size: 0.9rem;
@@ -772,7 +772,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
 
                         <div className="panel-right">
                             <div className="panel-right-inner">
-                                <div className="d-flex justify-content-between align-items-center p-3" style={{
+                                <div className="d-flex justify-content-between align-items-center py-2 px-3" style={{ /* MODIFIED: Changed p-3 to py-2 px-3 */
                                     background: 'rgba(255, 255, 255, 0.03)',
                                     borderBottom: '1px solid var(--border-color)'
                                 }}>
