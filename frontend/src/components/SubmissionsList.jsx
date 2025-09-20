@@ -1,17 +1,20 @@
 // frontend/src/components/SubmissionsList.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ListChecks, Filter, CheckCircle2, XCircle, Clock, MemoryStick } from 'lucide-react';
+// NEW: Import the Code2 icon for the view code button
+import { ListChecks, CheckCircle2, XCircle, Clock, Code2 } from 'lucide-react';
 const api_url = import.meta.env.VITE_SERVER;
 
 
-const SUBMISSION_API_BASE_URL =  ` ${api_url}/api/submissions`;
+const SUBMISSION_API_BASE_URL = ` ${api_url}/api/submissions`;
 
 function SubmissionsList({ userRole, isAuthenticated }) {
     const [submissions, setSubmissions] = useState([]);
     const [message, setMessage] = useState('');
     const [filterVerdict, setFilterVerdict] = useState('All');
     const [isLoading, setIsLoading] = useState(true);
+    // NEW: State to hold the submission whose code we want to view in a modal
+    const [selectedSubmission, setSelectedSubmission] = useState(null);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -20,7 +23,7 @@ function SubmissionsList({ userRole, isAuthenticated }) {
             setSubmissions([]);
             setMessage('Please log in to view your submissions.');
         }
-    }, [isAuthenticated, filterVerdict]); // Refetch when auth state or filter changes
+    }, [isAuthenticated, filterVerdict]);
 
     const fetchSubmissions = async () => {
         setIsLoading(true);
@@ -34,18 +37,8 @@ function SubmissionsList({ userRole, isAuthenticated }) {
             };
 
             let url = SUBMISSION_API_BASE_URL;
-            // Admins can view all submissions, regular users view their own
             if (userRole === 'user') {
-                // In a real app, you'd get the current user's ID from the decoded token
-                // For this example, we'll assume a dummy ID or that the backend handles it
-                // For now, the backend route /api/submissions/user/:userId expects userId in params
-                // You'd need to fetch current user ID or modify backend route to get it from token
-                // For simplicity, let's assume backend /api/submissions handles user-specific filtering
-                // if token is present and user is not admin.
-                // Or, if you have a user profile endpoint:
-                // const userProfile = await axios.get(`${USER_API_BASE_URL}/profile`, config);
-                // url = `${SUBMISSION_API_BASE_URL}/user/${userProfile.data._id}`;
-                url = `${SUBMISSION_API_BASE_URL}/user/${JSON.parse(atob(token.split('.')[1])).id}`; // Assuming JWT has user ID
+                url = `${SUBMISSION_API_BASE_URL}/user/${JSON.parse(atob(token.split('.')[1])).id}`;
             }
 
             const response = await axios.get(url, config);
@@ -148,7 +141,9 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                                             <th className="text">Time</th>
                                             <th className="text">Memory</th>
                                             <th className="text">Submitted At</th>
-                                            {userRole === 'admin' && <th className="text-white">User</th>} {/* Show user for admin */}
+                                            {userRole === 'admin' && <th className="text-white">User</th>}
+                                            {/* NEW: Added a header for the view code action */}
+                                            <th className="text text-center">Code</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -175,6 +170,15 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                                                 <td className="text">{sub.memoryUsed ? `${sub.memoryUsed} MB` : 'N/A'}</td>
                                                 <td className="text">{new Date(sub.submittedAt).toLocaleString()}</td>
                                                 {userRole === 'admin' && <td className="text">{sub.userId?.name || 'N/A'}</td>}
+                                                {/* NEW: Added a button to trigger the modal */}
+                                                <td className="text-center">
+                                                    <button 
+                                                        className="btn btn-outline-info btn-sm"
+                                                        onClick={() => setSelectedSubmission(sub)}
+                                                    >
+                                                        <Code2 size={16} />
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -184,6 +188,42 @@ function SubmissionsList({ userRole, isAuthenticated }) {
                     </div>
                 </div>
             </div>
+
+            {/* NEW: Modal to display the submitted code */}
+            {selectedSubmission && (
+                <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className="modal-content bg-dark text-light border-secondary">
+                            <div className="modal-header border-secondary">
+                                <h5 className="modal-title">
+                                    Submission for <span className="text-info">{selectedSubmission.problemId?.title}</span>
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close btn-close-white" 
+                                    onClick={() => setSelectedSubmission(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <pre className="bg-black p-3 rounded" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                                    <code>
+                                        {selectedSubmission.code}
+                                    </code>
+                                </pre>
+                            </div>
+                            <div className="modal-footer border-secondary">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary" 
+                                    onClick={() => setSelectedSubmission(null)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
