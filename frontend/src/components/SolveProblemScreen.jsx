@@ -10,7 +10,7 @@ import { python } from '@codemirror/lang-python';
 import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import ReactMarkdown from 'react-markdown';
 
-// API URLs - Fixed formatting (removed extra spaces)
+// API URLs
 const api_url = import.meta.env.VITE_SERVER;
 const api_com = import.meta.env.VITE_COMPILER;
 const SUBMISSION_API_BASE_URL = `${api_url}/api/submissions`;
@@ -398,7 +398,7 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                 
                 .console-container {
                     flex-shrink: 0;
-                    height: 35%;
+                    height: 25%; /* MODIFIED: Reduced from 35% to give more space to the editor */
                     display: flex;
                     flex-direction: column;
                     transition: height 0.3s ease-in-out;
@@ -636,14 +636,14 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
                         <div className="d-flex align-items-center">
                             
                                 <img src="/codevm_logo.svg" 
-                             alt="CodeVM Logo" 
-                             className="logo-image" 
-                             style={{ 
-                                 maxWidth: '38px', 
-                                 height: 'auto',
-                                 filter: 'drop-shadow(0 0 10px rgba(167, 112, 239, 0.3))',
-                                 transition: 'filter 0.3s ease'
-                             }} />
+                                 alt="CodeVM Logo" 
+                                 className="logo-image" 
+                                 style={{ 
+                                     maxWidth: '38px', 
+                                     height: 'auto',
+                                     filter: 'drop-shadow(0 0 10px rgba(167, 112, 239, 0.3))',
+                                     transition: 'filter 0.3s ease'
+                                 }} />
                             
                             <h1 style={{
                                 fontSize: '1.8rem',
