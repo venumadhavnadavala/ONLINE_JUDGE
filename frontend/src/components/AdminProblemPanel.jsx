@@ -1,4 +1,3 @@
-// frontend/src/components/AdminProblemPanel.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -15,25 +14,24 @@ import {
     LogOut,
     Search,
     Tag,
-    Gauge,
-    ChevronDown, // Added for dropdown icon
+    Gauge
 } from 'lucide-react';
 
 const api_url = import.meta.env.VITE_SERVER;
 // Base URL for your backend API
 const API_BASE_URL = `${api_url}/api/problems`;
 
-// --- Helper function to get difficulty class ---
-const getDifficultyClass = (difficulty) => {
+// --- Helper for Difficulty Badge Styles ---
+const getDifficultyStyles = (difficulty) => {
     switch (difficulty) {
         case 'Easy':
-            return 'difficulty-easy';
+            return { backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a' };
         case 'Medium':
-            return 'difficulty-medium';
+            return { backgroundColor: '#f59e0b', color: 'black', border: '1px solid #d97706' };
         case 'Hard':
-            return 'difficulty-hard';
+            return { backgroundColor: '#ef4444', color: 'white', border: '1px solid #dc2626' };
         default:
-            return '';
+            return { backgroundColor: '#6b7280', color: 'white' };
     }
 };
 
@@ -86,11 +84,13 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
         try {
             const token = localStorage.getItem('token');
             const config = {
-                headers: {
+                headers:
+                {
                     Authorization: `Bearer ${token}`,
                 },
             };
-            const response = await axios.get(API_BASE_URL, config);
+            const response = await
+                axios.get(API_BASE_URL, config);
             setProblems(response.data);
         } catch (error) {
             console.error('Error fetching problems:', error);
@@ -98,7 +98,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
         }
     };
 
-    // --- Problem CRUD Handlers (No Changes Here) ---
+    // --- Problem CRUD Handlers (Existing logic, no changes) ---
     const resetProblemForm = () => {
         setTitle('');
         setStatement('');
@@ -169,8 +169,6 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
             tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
         };
 
-        console.log('Submitting problem data:', problemData);
-
         try {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -212,7 +210,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
         }
     };
 
-    // --- Test Case CRUD Handlers (No Changes Here) ---
+    // --- Test Case CRUD Handlers (Existing logic, no changes) ---
     const fetchTestCases = async (problemId) => {
         try {
             const token = localStorage.getItem('token');
@@ -304,303 +302,202 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
         }
     };
 
+
     const isAdmin = userRole === 'admin';
 
     const filteredProblems = problems.filter(problem =>
         problem.tags.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase())) || filterTag === ''
     );
+    
+    // --- Custom Styles for Themed UI ---
+    const modalStyle = {
+        backgroundColor: 'rgba(23, 23, 31, 1)',
+        border: '1px solid #372948',
+        color: '#d1d5db'
+    };
+    
+    const inputStyle = {
+        backgroundColor: '#2d3748',
+        color: '#e2e8f0',
+        border: '1px solid #4a5568'
+    };
+
 
     return (
-        <div className="py-5" style={{ minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-        {/*
-            =========================================================================
-            FIX: The entire comment block below is now wrapped in { ... }
-            which is the correct syntax for multi-line comments inside JSX.
-            =========================================================================
-        */}
-        {/*
-            * =========================================================================
-            * UI ENHANCEMENT NOTES:
-            * The following JSX has been updated to match the provided image.
-            * For the full visual effect, add the following styles to your CSS file:
-            *
-            * body {
-            * background-color: #0f0c29;
-            * background-image: linear-gradient(to right top, #0c0a1f, #1a1a36, #282a4d, #363c66, #454e80);
-            * color: #e0e0e0;
-            * }
-            *
-            * .problem-card {
-            * background: rgba(22, 22, 38, 0.7);
-            * border: 1px solid #3a3a5a;
-            * border-radius: 12px;
-            * padding: 1.5rem;
-            * transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            * display: flex;
-            * flex-direction: column;
-            * height: 100%;
-            * }
-            *
-            * .problem-card:hover {
-            * transform: translateY(-5px);
-            * box-shadow: 0 8px 30px rgba(78, 78, 255, 0.2);
-            * }
-            *
-            * .problem-card .qid {
-            * color: #a0a0c0;
-            * font-weight: 500;
-            * font-size: 0.9rem;
-            * }
-            *
-            * .problem-card .problem-title {
-            * color: #ffffff;
-            * font-size: 1.25rem;
-            * font-weight: 600;
-            * margin-top: 0.5rem;
-            * }
-            *
-            * .problem-card .tags-container {
-            * display: flex;
-            * flex-wrap: wrap;
-            * gap: 0.5rem;
-            * margin-top: 1rem;
-            * }
-            *
-            * .problem-card .tag {
-            * background-color: #3a3a5a;
-            * color: #c0c0e0;
-            * padding: 0.25rem 0.75rem;
-            * border-radius: 12px;
-            * font-size: 0.75rem;
-            * }
-            *
-            * .problem-card .info-footer {
-            * margin-top: 1.5rem;
-            * margin-bottom: 1.5rem;
-            * display: flex;
-            * align-items: center;
-            * gap: 1rem;
-            * flex-grow: 1; 
-            * }
-            *
-            * .difficulty-easy, .difficulty-medium, .difficulty-hard {
-            * padding: 0.3rem 1rem;
-            * border-radius: 12px;
-            * font-weight: 600;
-            * font-size: 0.8rem;
-            * text-transform: uppercase;
-            * }
-            *
-            * .difficulty-easy { background-color: rgba(25, 135, 84, 0.2); color: #198754; }
-            * .difficulty-medium { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
-            * .difficulty-hard { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
-            *
-            * .problem-card .time-limit {
-            * color: #a0a0c0;
-            * font-size: 0.9rem;
-            * }
-            *
-            * .btn-view, .btn-solve {
-            * width: 100%;
-            * padding: 0.6rem;
-            * border-radius: 8px;
-            * border: none;
-            * font-weight: 600;
-            * transition: background-color 0.2s;
-            * }
-            *
-            * .btn-view { background-color: #0d6efd; color: white; }
-            * .btn-view:hover { background-color: #0b5ed7; }
-            *
-            * .btn-solve { background-color: #dc3545; color: white; }
-            * .btn-solve:hover { background-color: #bb2d3b; }
-            *
-            * .search-bar-container {
-            * display: flex;
-            * gap: 1rem;
-            * background-color: #161626;
-            * padding: 0.75rem;
-            * border-radius: 12px;
-            * border: 1px solid #3a3a5a;
-            * }
-            *
-            * .search-bar-container .search-input {
-            * flex-grow: 1;
-            * background-color: transparent;
-            * border: none;
-            * color: white;
-            * }
-            * .search-bar-container .search-input:focus { box-shadow: none; }
-            *
-            * .filter-dropdown {
-            * background-color: #2a2a4a;
-            * color: #e0e0e0;
-            * border: 1px solid #3a3a5a;
-            * border-radius: 8px;
-            * padding: 0.5rem 1rem;
-            * }
-            *
-            * =========================================================================
-        */}
+        <div className="min-vh-100 py-5" style={{ background: 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)', color: '#d1d5db' }}>
             <div className="container">
 
                 {message && (
-                    <div className="alert alert-info alert-dismissible fade show mb-4 rounded-3" role="alert">
+                    <div className="alert alert-info alert-dismissible fade show mb-4 rounded-3" role="alert" style={{backgroundColor: '#1e3a8a', color: '#e0f2fe', border: '1px solid #3b82f6'}}>
                         {message}
                         <button type="button" className="btn-close" onClick={() => setMessage('')} aria-label="Close"></button>
                     </div>
                 )}
+                
+                <div className="card shadow-lg mb-5" style={{ backgroundColor: 'rgba(23, 23, 31, 0.85)', border: '1px solid #372948', backdropFilter: 'blur(8px)', borderRadius: '1rem' }}>
+                    <div className="card-body p-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h2 className="h4 text-light mb-0 fw-semibold">Problems List</h2>
+                            {isAdmin && (
+                                <button
+                                    onClick={openCreateProblemModal}
+                                    className="btn btn-lg d-flex align-items-center justify-content-center px-4 py-2 fw-bold rounded-pill"
+                                    style={{ background: 'linear-gradient(90deg, #9333ea, #581c87)', border: 'none', color: 'white' }}
+                                >
+                                    <PlusCircle className="me-2" style={{ width: '1.25rem', height: '1.25rem' }} />
+                                    Add New Problem
+                                </button>
+                            )}
+                        </div>
 
-                {/* --- Enhanced Search and Filter Bar --- */}
-                <div className="search-bar-container mb-5 d-flex align-items-center">
-                    <Search size={20} className="text-muted me-2" />
-                    <input
-                        type="text"
-                        className="form-control search-input"
-                        placeholder="Search tags: array, dp, hash, tree..."
-                        value={filterTag}
-                        onChange={(e) => setFilterTag(e.target.value)}
-                    />
-                    <div className="d-flex gap-3">
-                        <button className="filter-dropdown d-flex align-items-center">
-                            All Difficulties <ChevronDown size={16} className="ms-2" />
-                        </button>
-                        <button className="filter-dropdown d-flex align-items-center">
-                            All Problems <ChevronDown size={16} className="ms-2" />
-                        </button>
-                         {isAdmin && (
-                            <button onClick={openCreateProblemModal} className="btn btn-primary d-flex align-items-center">
-                                <PlusCircle size={16} className="me-2" /> Add
-                            </button>
+                        {/* Filter by Tags Input */}
+                        <div className="mb-4">
+                            <div className="input-group input-group-lg">
+                                <span className="input-group-text rounded-start-pill" style={{backgroundColor: '#2d3748', border: '1px solid #4a5568'}}><Search size={20} color="#9333ea"/></span>
+                                <input
+                                    type="text"
+                                    className="form-control rounded-end-pill"
+                                    style={inputStyle}
+                                    placeholder="Search tags: array, dp, hash..."
+                                    value={filterTag}
+                                    onChange={(e) => setFilterTag(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {problems.length === 0 ? (
+                            <div className="text-center text-muted py-5 rounded-3" style={{border: '2px dashed #372948'}}>
+                                <p className="mb-0 fs-5">
+                                    {isAuthenticated ? 'No problems found. Start by adding one!' : 'Please log in to view problems.'}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                {filteredProblems.map((problem) => (
+                                    <div className="col" key={problem._id}>
+                                        <div className="card h-100 shadow-sm" style={{ backgroundColor: '#1f2029', border: '1px solid #3c305c', transition: 'transform 0.2s ease, box-shadow 0.2s ease', borderRadius: '0.75rem'}}>
+                                            <div className="card-body d-flex flex-column">
+                                                <h5 className="card-title text-light fw-bold mb-3">{problem._id}. {problem.title}</h5>
+                                                
+                                                <div className="mb-3">
+                                                    <span className="badge rounded-pill me-2 px-3 py-2" style={getDifficultyStyles(problem.difficulty)}>
+                                                        {problem.difficulty}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="d-flex flex-wrap gap-2 mb-3">
+                                                {problem.tags.map((tag, index) => (
+                                                    <span key={index} className="badge rounded-pill" style={{backgroundColor: '#5843a1', color: '#e0d8ff'}}>{tag}</span>
+                                                ))}
+                                                </div>
+
+                                                <p className="card-text small flex-grow-1" style={{color: '#a7a3b3'}}>{problem.statement.substring(0, 100)}...</p>
+
+                                                <div className="d-flex justify-content-start gap-2 mt-auto pt-3 border-top" style={{borderColor: '#3c305c'}}>
+                                                    <button
+                                                        onClick={() => onSolveProblem(problem)}
+                                                        className="btn btn-sm rounded-pill px-3 fw-bold"
+                                                        style={{ background: '#be123c', color: 'white', border: 'none' }}
+                                                        title="Solve Problem"
+                                                    >
+                                                        Solve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openViewProblemModal(problem)}
+                                                        className="btn btn-sm rounded-pill px-3"
+                                                        style={{ background: '#3b3b8f', color: 'white', border: 'none' }}
+                                                        title="View Problem"
+                                                    >
+                                                        View
+                                                    </button>
+                                                    {isAdmin && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openEditProblemModal(problem)}
+                                                                className="btn btn-sm rounded-pill px-3"
+                                                                style={{ background: '#b45309', color: 'white', border: 'none' }}
+                                                                title="Edit Problem"
+                                                            >
+                                                                <SquarePen size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openConfirmDeleteProblemModal(problem._id)}
+                                                                className="btn btn-sm rounded-pill px-3"
+                                                                style={{ background: '#4b5563', color: 'white', border: 'none' }}
+                                                                title="Delete Problem"
+                                                            >
+                                                                <Trash size={14} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* --- Enhanced Problems Grid --- */}
-                {problems.length === 0 ? (
-                    <div className="text-center text-muted py-5 border border-secondary rounded-3 card-themed">
-                        <p className="mb-0 fs-5">
-                            {isAuthenticated ? 'No problems found. Start by adding one (if admin) or check back later!' : 'Please log in to view problems.'}
-                        </p>
-                    </div>
-                ) : (
-                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                        {filteredProblems.map((problem, index) => (
-                            <div className="col" key={problem._id}>
-                                <div className="problem-card">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <span className="qid">QID {index + 1}</span>
-                                        {isAdmin && (
-                                           <div className="admin-actions d-flex gap-2">
-                                                <button onClick={() => openEditProblemModal(problem)} className="btn btn-sm btn-outline-warning p-1" style={{width: '28px', height: '28px'}} title="Edit">
-                                                    <SquarePen size={14}/>
-                                                </button>
-                                                <button onClick={() => openConfirmDeleteProblemModal(problem._id)} className="btn btn-sm btn-outline-danger p-1" style={{width: '28px', height: '28px'}} title="Delete">
-                                                    <Trash size={14}/>
-                                                </button>
-                                           </div>
-                                        )}
-                                    </div>
-
-                                    <h5 className="problem-title">{problem.title}</h5>
-
-                                    <div className="tags-container">
-                                        {problem.tags.map((tag, i) => (
-                                            <span key={i} className="tag">{tag}</span>
-                                        ))}
-                                    </div>
-
-                                    <div className="info-footer">
-                                        <span className={getDifficultyClass(problem.difficulty)}>
-                                            {problem.difficulty}
-                                        </span>
-                                        <span className="time-limit">{problem.timeLimit}s</span>
-                                    </div>
-
-                                    <div className="d-flex gap-3 mt-auto">
-                                        <button onClick={() => openViewProblemModal(problem)} className="btn-view">
-                                            View
-                                        </button>
-                                        {!isAdmin && isAuthenticated && (
-                                            <button onClick={() => onSolveProblem(problem)} className="btn-solve">
-                                                Solve
-                                            </button>
-                                        )}
-                                    </div>
+                {/* --- ALL MODALS --- */}
+                
+                {/* Problem Create/Edit Modal */}
+                {isModalOpen && isAdmin && (
+                    <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                            <div className="modal-content shadow-lg rounded-4" style={modalStyle}>
+                                <div className="modal-header rounded-top-4" style={{backgroundColor: '#111827', borderBottom: '1px solid #372948'}}>
+                                    <h5 className="modal-title fw-bold" style={{ color: '#a78bfa' }}>{formMode === 'create' ? 'Create New Problem' : 'Edit Problem'}</h5>
+                                    <button type="button" className="btn-close btn-close-white" onClick={closeAllModals}></button>
                                 </div>
+                                <form onSubmit={handleProblemSubmit}>
+                                    <div className="modal-body row g-3 p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                                        {/* Form fields with updated styles */}
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Title</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="form-control form-control-lg rounded-pill" style={inputStyle} required /></div>
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Difficulty</label><select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="form-select form-select-lg rounded-pill" style={inputStyle} required><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
+                                        <div className="col-12"><label className="form-label text-light fw-semibold">Problem Statement</label><textarea value={statement} onChange={(e) => setStatement(e.target.value)} rows="5" className="form-control rounded-3" style={inputStyle} required></textarea></div>
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Input Format</label><textarea value={input} onChange={(e) => setInput(e.target.value)} rows="3" className="form-control rounded-3" style={inputStyle} required></textarea></div>
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Output Format</label><textarea value={output} onChange={(e) => setOutput(e.target.value)} rows="3" className="form-control rounded-3" style={inputStyle} required></textarea></div>
+                                        <div className="col-12"><label className="form-label text-light fw-semibold">Constraints</label><textarea value={constraints} onChange={(e) => setConstraints(e.target.value)} rows="3" className="form-control rounded-3" style={inputStyle} required></textarea></div>
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Time Limit (s)</label><input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="form-control form-control-lg rounded-pill" style={inputStyle} required min="1" /></div>
+                                        <div className="col-md-6"><label className="form-label text-light fw-semibold">Memory Limit (MB)</label><input type="number" value={memoryLimit} onChange={(e) => setMemoryLimit(e.target.value)} className="form-control form-control-lg rounded-pill" style={inputStyle} required min="1" /></div>
+                                        <div className="col-12"><label className="form-label text-light fw-semibold">Tags (comma-separated)</label><input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className="form-control form-control-lg rounded-pill" style={inputStyle} placeholder="e.g., Array, DP, Graph" /></div>
+                                        
+                                        {/* Test Cases Section */}
+                                        {formMode === 'edit' && currentProblem && (
+                                            <div className="col-12 mt-5">
+                                                <h4 className="mb-3 d-flex align-items-center" style={{color: '#818cf8'}}><FlaskConical size={24} className="me-2" /> Test Cases</h4>
+                                                <button onClick={openCreateTestCaseModal} type="button" className="btn btn-outline-success d-flex align-items-center rounded-pill px-3 py-2 float-end mb-3"><PlusCircle size={16} className="me-2" /> Add Test Case</button>
+                                                {testCases.length === 0 ? <div className="alert alert-secondary text-center rounded-3" style={{...inputStyle, color: '#a7a3b3'}}>No test cases found.</div> : (
+                                                    <div className="table-responsive">
+                                                        <table className="table table-sm table-bordered table-hover align-middle" style={{'--bs-table-bg': 'transparent', '--bs-table-border-color': '#4a5568', color: '#d1d5db'}}>
+                                                            <thead style={{backgroundColor: '#372948'}}><tr className="text-white"><th>#</th><th>Input</th><th>Output</th><th>Hidden</th><th>Points</th><th>Actions</th></tr></thead>
+                                                            <tbody>{testCases.map((tc, index) => (
+                                                                <tr key={tc._id}>
+                                                                    <td>{index + 1}</td>
+                                                                    <td><pre className="mb-0 small p-2 rounded" style={inputStyle}>{tc.input}</pre></td>
+                                                                    <td><pre className="mb-0 small p-2 rounded" style={inputStyle}>{tc.output}</pre></td>
+                                                                    <td>{tc.isHidden ? <XCircle size={20} className="text-danger" /> : <CheckCircle size={20} className="text-success" />}</td>
+                                                                    <td>{tc.points}</td>
+                                                                    <td><div className="d-flex gap-2"><button onClick={() => openEditTestCaseModal(tc)} type="button" className="btn btn-sm btn-outline-warning rounded-circle p-1"><SquarePen size={14} /></button><button onClick={() => handleDeleteTestCase(tc._id)} type="button" className="btn btn-sm btn-outline-danger rounded-circle p-1"><Trash size={14} /></button></div></td>
+                                                                </tr>))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="modal-footer justify-content-center border-top-0 pt-0 pb-3">
+                                        <button type="button" onClick={closeAllModals} className="btn btn-secondary btn-lg rounded-pill px-5" style={{backgroundColor: '#4b5563'}}>Cancel</button>
+                                        <button type="submit" className="btn btn-lg rounded-pill px-5 fw-bold" style={{ background: 'linear-gradient(90deg, #9333ea, #581c87)', border: 'none', color: 'white' }}>{formMode === 'create' ? 'Create Problem' : 'Update Problem'}</button>
+                                    </div>
+                                </form>
                             </div>
-                        ))}
+                        </div>
                     </div>
                 )}
-            </div>
-
-            {/* --- Modals (Styling is kept as is, as they were not in the image) --- */}
-            
-            {/* Problem Create/Edit Modal (Admin Only) */}
-             {isModalOpen && isAdmin && (
-                 <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-                     <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                         <div className="modal-content card-themed shadow-lg rounded-4 border-secondary">
-                             <div className="modal-header bg-dark text-white rounded-top-4 border-secondary">
-                                 <h5 className="modal-title fw-bold" style={{ color: 'var(--primary-accent)' }}>{formMode === 'create' ? 'Create New Problem' : 'Edit Problem'}</h5>
-                                 <button type="button" className="btn-close btn-close-white" onClick={closeAllModals} aria-label="Close"></button>
-                             </div>
-                             <form onSubmit={handleProblemSubmit}>
-                                 <div className="modal-body row g-3 p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                    <div className="col-md-6">
-                                        <label htmlFor="title" className="form-label text-light fw-semibold">Title</label>
-                                        <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label htmlFor="difficulty" className="form-label text-light fw-semibold">Difficulty</label>
-                                        <select id="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="form-select form-select-lg form-select-themed rounded-pill" required>
-                                            <option value="Easy">Easy</option>
-                                            <option value="Medium">Medium</option>
-                                            <option value="Hard">Hard</option>
-                                        </select>
-                                    </div>
-                                    <div className="col-12">
-                                        <label htmlFor="statement" className="form-label text-light fw-semibold">Problem Statement</label>
-                                        <textarea id="statement" value={statement} onChange={(e) => setStatement(e.target.value)} rows="5" className="form-control form-control-themed rounded-3" required></textarea>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label htmlFor="input" className="form-label text-light fw-semibold">Input Format</label>
-                                        <textarea id="input" value={input} onChange={(e) => setInput(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label htmlFor="output" className="form-label text-light fw-semibold">Output Format</label>
-                                        <textarea id="output" value={output} onChange={(e) => setOutput(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
-                                    </div>
-                                    <div className="col-12">
-                                        <label htmlFor="constraints" className="form-label text-light fw-semibold">Constraints</label>
-                                        <textarea id="constraints" value={constraints} onChange={(e) => setConstraints(e.target.value)} rows="3" className="form-control form-control-themed rounded-3" required></textarea>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label htmlFor="timeLimit" className="form-label text-light fw-semibold">Time Limit (seconds)</label>
-                                        <input type="number" id="timeLimit" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required min="1" />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label htmlFor="memoryLimit" className="form-label text-light fw-semibold">Memory Limit (MB)</label>
-                                        <input type="number" id="memoryLimit" value={memoryLimit} onChange={(e) => setMemoryLimit(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" required min="1" />
-                                    </div>
-                                    <div className="col-12">
-                                        <label htmlFor="tags" className="form-label text-light fw-semibold">Tags (comma-separated)</label>
-                                        <input type="text" id="tags" value={tags} onChange={(e) => setTags(e.target.value)} className="form-control form-control-lg form-control-themed rounded-pill" placeholder="e.g., Array, DP, Graph" />
-                                    </div>
-                                     {formMode === 'edit' && currentProblem && (
-                                         <div className="col-12 mt-5">
-                                         </div>
-                                     )}
-                                 </div>
-                                 <div className="modal-footer justify-content-center border-top-0 pt-0">
-                                     <button type="button" onClick={closeAllModals} className="btn btn-secondary btn-lg rounded-pill px-4">Cancel</button>
-                                     <button type="submit" className="btn btn-primary-gradient btn-lg rounded-pill px-4 fw-bold">{formMode === 'create' ? 'Create Problem' : 'Update Problem'}</button>
-                                 </div>
-                             </form>
-                         </div>
-                     </div>
-                 </div>
-             )}
                 {/* Test Case Create/Edit Modal (NEW) */}
                 {isTestCaseModalOpen && isAdmin && currentProblem && (
                     <div className="modal d-block fade show" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
@@ -741,11 +638,11 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                         </div>
                     </div>
                 )}
+       
             </div>
-            
-        );
-    }
+        </div>
+    );
+}
 
-export default AdminProblemPanel; // FIX: Added export default
-
+export default AdminProblemPanel;
 
