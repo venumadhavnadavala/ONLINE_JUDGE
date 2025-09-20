@@ -377,7 +377,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                     <div className="col" key={problem._id}>
                                         <div className="card h-100 shadow-sm" style={{ backgroundColor: '#1f2029', border: '1px solid #3c305c', transition: 'transform 0.2s ease, box-shadow 0.2s ease', borderRadius: '0.75rem'}}>
                                             <div className="card-body d-flex flex-column">
-                                                <h5 className="card-title text-light fw-bold mb-3">{problem._id}. {problem.title}</h5>
+                                                <h5 className="card-title text-light fw-bold mb-3"> {problem.title}</h5>
                                                 
                                                 <div className="mb-3">
                                                     <span className="badge rounded-pill me-2 px-3 py-2" style={getDifficultyStyles(problem.difficulty)}>
@@ -391,7 +391,7 @@ function AdminProblemPanel({ userRole, isAuthenticated, onLogout, onSolveProblem
                                                 ))}
                                                 </div>
 
-                                                <p className="card-text small flex-grow-1" style={{color: '#a7a3b3'}}>{problem.statement.substring(0, 100)}...</p>
+                                              
 
                                                 <div className="d-flex justify-content-start gap-2 mt-auto pt-3 border-top" style={{borderColor: '#3c305c'}}>
                                                     <button
