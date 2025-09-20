@@ -163,13 +163,11 @@ function SolveProblemScreen({ problem, onClose, isAuthenticated }) {
         };
 
         try {
-            // NEW: Added a timeout to the custom run as well.
             const response = await axios.post(COMPILER_RUN_URL, runData, { timeout: 15000 });
             setCompileMessage(response.data.error ? 'Compilation Error' : 'Successfully Executed');
             setOutputStdout(response.data.output || response.data.error || '');
         } catch (error) {
             console.error('Run error:', error);
-            // NEW: Added specific timeout handling for the custom run.
             if (error.code === 'ECONNABORTED') {
                  setCompileMessage('Execution Failed');
                  setOutputStdout('Execution timed out. Your code took too long to run with the custom input.');
